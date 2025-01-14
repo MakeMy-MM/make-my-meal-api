@@ -24,7 +24,7 @@ jobs:
 
       - name: Run Pint
         run: |
-          docker exec pint bash -c "vendor/bin/pint --test"
+          docker exec pint bash -c "/vendor/bin/pint --test"
 
       - name: Stop and clean up containers
         if: always()
