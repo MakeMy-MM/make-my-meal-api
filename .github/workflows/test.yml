@@ -1,9 +1,9 @@
-name: Run Laravel Tests
+name: Execute tests
 
 on: [push, pull_request]
 
 jobs:
-  laravel-tests:
+  lint-and-test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -14,34 +14,55 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: composer-
-
       - name: Install dependencies
         run: |
           docker run --rm \
             -v $(pwd):/var/www/html \
             -w /var/www/html \
-            laravelsail/php82-composer:latest \
-            composer install --ignore-platform-reqs
+            php:8.2-cli \
+            bash -c "apt-get update && apt-get install -y unzip git libpq-dev && \
+                     docker-php-ext-install pdo_pgsql pgsql && \
+                     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
+                     composer install --ignore-platform-reqs"
 
-      - name: Start Sail
+      - name: Start PostgreSQL container
         run: |
-          cp .env.example .env
-          ./vendor/bin/sail up -d
+          docker run --name postgres -e POSTGRES_PASSWORD=root -e POSTGRES_DB=make_my_test -d postgres:13
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until docker exec postgres pg_isready -U root; do
+            echo "Waiting for PostgreSQL to be ready...";
+            sleep 1;
+          done
 
       - name: Run migrations
         run: |
-          ./vendor/bin/sail artisan migrate --force
+          docker run --rm \
+            --link postgres:postgres \
+            -v $(pwd):/var/www/html \
+            -w /var/www/html \
+            php:8.2-cli \
+            bash -c "cp .env.example .env && \
+                     sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=pgsql/' .env && \
+                     sed -i 's/DB_HOST=127.0.0.1/DB_HOST=postgres/' .env && \
+                     sed -i 's/DB_PASSWORD=/DB_PASSWORD=root/' .env && \
+                     php artisan migrate --force"
 
       - name: Run tests
         run: |
-          ./vendor/bin/sail test
+          docker run --rm \
+            --link postgres:postgres \
+            -v $(pwd):/var/www/html \
+            -w /var/www/html \
+            php:8.2-cli \
+            bash -c "./vendor/bin/phpunit"
 
-      - name: Stop Sail
+      - name: Stop and clean up containers
         if: always()
-        run: ./vendor/bin/sail down
+        run: |
+          docker stop postgres || true
+          docker rm postgres || true
+          docker container prune -f
+          docker volume prune -f
+          docker network prune -f
