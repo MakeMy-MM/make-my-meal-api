@@ -30,7 +30,14 @@ jobs:
         run: |
           until docker exec postgres pg_isready -U root; do
             echo "Waiting for PostgreSQL to be ready...";
-            sleep 1;
+            sleep 3;
+          done
+
+      - name: Wait for PHPUnit to be ready
+        run: |
+          until docker inspect --format '{{.State.Running}}' phpunit | grep -q "true"; do
+            echo "Waiting for PHPUnit to be ready...";
+            sleep 3;
           done
 
       - name: Run migrations
