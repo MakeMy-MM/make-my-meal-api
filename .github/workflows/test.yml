@@ -1,9 +1,9 @@
-name: Run Pint Lint
+name: Run Laravel Tests
 
 on: [push, pull_request]
 
 jobs:
-  lint:
+  laravel-tests:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -13,6 +13,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: composer-
 
       - name: Install dependencies
         run: |
@@ -27,13 +34,13 @@ jobs:
           cp .env.example .env
           ./vendor/bin/sail up -d
 
-      - name: Install Pint in container
+      - name: Run migrations
         run: |
-          ./vendor/bin/sail composer global require laravel/pint
+          ./vendor/bin/sail artisan migrate --force
 
-      - name: Run Pint
+      - name: Run tests
         run: |
-          ./vendor/bin/sail pint --test
+          ./vendor/bin/sail test
 
       - name: Stop Sail
         if: always()
