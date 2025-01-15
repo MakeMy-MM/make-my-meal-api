@@ -74,6 +74,14 @@ jobs:
       - name: Check container status
         run: docker ps
 
+      - name: Show folders
+        run: docker exec pint bash -c "ls -l"
+
+      - name: Debug dependencies
+        run: |
+          docker exec pint bash -c "ls -l ./vendor"
+
+
       - name: Run Pint
         run: |
           docker exec pint bash -c "./vendor/bin/pint --test"
