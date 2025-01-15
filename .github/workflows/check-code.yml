@@ -68,6 +68,7 @@ jobs:
           docker run --name pint -d \
             -v $(pwd):/var/www/html \
             -w /var/www/html \
+            --memory=4g \
             composer:2.8.4
 
       - name: Install dependencies
