@@ -1,9 +1,9 @@
-name: Execute tests using PHPUnit
+name: Execute code verification
 
 on: push
 
 jobs:
-  test:
+  phpunit:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -57,3 +57,32 @@ jobs:
         run: |
           docker stop postgres phpunit
           docker rm postgres phpunit
+
+  pint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        php: [8.4]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          docker run --name pint -d \
+            -v $(pwd):/var/www/html \
+            -w /var/www/html \
+            composer:2.8.4 \
+            bash -c "composer install --ignore-platform-reqs"
+
+      - name: Run Pint
+        run: |
+          docker exec pint bash -c "/vendor/bin/pint --test"
+
+      - name: Stop and clean up containers
+        if: always()
+        run: |
+          docker stop pint
+          docker rm pint
