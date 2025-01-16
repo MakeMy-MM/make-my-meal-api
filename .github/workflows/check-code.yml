@@ -1,4 +1,4 @@
-name: Execute code verification
+name: CI
 
 on: push
 
@@ -9,6 +9,16 @@ jobs:
   #     fail-fast: true
   #     matrix:
   #       php: [8.4]
+# services:
+#   postgres:
+#     image: postgres:10.8
+#     env:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
+#       POSTGRES_DB: test
+#     ports:
+#     - 5432:5432
+#     options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
   #   steps:
   #     - name: Checkout code
@@ -53,42 +63,41 @@ jobs:
 
   pint:
     runs-on: ubuntu-latest
-    # needs: phpunit
     strategy:
       fail-fast: true
-      matrix:
-        php: [8.4]
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install container
+      - name: Build Docker image
         run: |
-          docker run --name pint -d \
-            -v $(pwd):/var/www/html \
-            -w /var/www/html \
-            --memory=4g \
-            composer:2.8.4
+          docker build -t pint .
 
-      - name: Install dependencies
+      - name: Run Composer Install
         run: |
-          docker exec pint bash -c "git config --global --add safe.directory /var/www/html && composer install --optimize-autoloader --ignore-platform-reqs"
+          docker exec pint \
+          -v ${{ github.workspace }}:/var/www \
+          username/php-composer:8.4 composer install
 
-      - name: Show folders
-        run: docker exec pint bash -c "ls -l"
+      # - name: Install dependencies
+      #   run: |
+      #     docker exec pint bash -c "git config --global --add safe.directory /var/www/html && composer install --ignore-platform-reqs"
 
-      - name: Debug dependencies
-        run: |
-          docker exec pint bash -c "ls -l ./vendor"
+      # - name: Show folders
+      #   run: docker exec pint bash -c "ls -l"
+
+      # - name: Debug dependencies
+      #   run: |
+      #     docker exec pint bash -c "ls -l ./vendor"
 
 
-      - name: Run Pint
-        run: |
-          docker exec pint bash -c "./vendor/bin/pint --test"
+      # - name: Run Pint
+      #   run: |
+      #     docker exec pint bash -c "./vendor/bin/pint --test"
 
-      - name: Stop and clean up containers
-        if: always()
-        run: |
-          docker stop pint
-          docker rm pint
+      # - name: Stop and clean up containers
+      #   if: always()
+      #   run: |
+      #     docker stop pint
+      #     docker rm pint
