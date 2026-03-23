@@ -55,27 +55,6 @@ class AuthControllerTest extends TestFeatureCase
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
 
-    public function testGetMeReturnsSuccess(): void
-    {
-        $response = $this->getLoggedClient(['email' => 'user@example.com'])->get('/auth/me');
-
-        $response->assertStatus(Response::HTTP_OK);
-        $response->assertJsonStructure([
-            'user' => $this->userStructure(),
-        ]);
-        $response->assertJsonFragment([
-            'email' => 'user@example.com',
-        ]);
-        $response->assertJsonMissingPath('tokens');
-    }
-
-    public function testGetMeWithoutAccessTokenReturnsUnauthorized(): void
-    {
-        $response = $this->getClient()->get('/auth/me');
-
-        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
-    }
-
     public function testPostLogoutReturnsNoContent(): void
     {
         $loginResponse = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());

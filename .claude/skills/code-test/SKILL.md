@@ -460,3 +460,7 @@ class Create{Entité}RequestTest extends TestUnitCase
 ## Clean Code
 
 Une fois les tests terminés, invoquer le skill `/clean-code` pour lancer le formatage et l'analyse statique.
+
+## Commit
+
+Une fois le clean code terminé, demander à l'utilisateur si tout est bon pour commit. Si l'utilisateur demande des modifications, les appliquer, relancer le clean code, puis redemander si c'est bon pour commit. Répéter jusqu'à validation. Une fois validé, invoquer le skill `/commit`.
