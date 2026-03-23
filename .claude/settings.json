@@ -1,0 +1,17 @@
+{
+    "permissions": {
+        "allow": [],
+        "ask": [
+            "Bash(git commit:*)"
+        ],
+        "deny": [
+            "Bash(git push:*)",
+            "Bash(python -c *)",
+            "Bash(python3 -c *)"
+        ]
+    },
+    "attribution": {
+        "commit": "",
+        "pr": ""
+    }
+}

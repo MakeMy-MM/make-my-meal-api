@@ -1,0 +1,17 @@
+#!/bin/sh
+
+echo "Running php-cs-fixer..."
+make format-fix
+if [ $? -ne 0 ]; then
+    echo "php-cs-fixer failed. Please fix the errors before committing."
+    exit 1
+fi
+
+echo "Running phpstan..."
+make analyse
+if [ $? -ne 0 ]; then
+    echo "phpstan failed. Please fix the errors before committing."
+    exit 1
+fi
+
+exit 0
