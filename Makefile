@@ -1,5 +1,5 @@
 COMPOSE := docker compose --env-file .env -f docker/dev/compose.yaml
-APP := $(COMPOSE) exec -T -e XDEBUG_MODE=off app
+APP := $(COMPOSE) exec -e XDEBUG_MODE=off app
 
 # Docker
 up:

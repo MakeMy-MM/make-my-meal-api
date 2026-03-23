@@ -9,7 +9,6 @@ use Illuminate\Contracts\Validation\Validator;
 
 class LoginRequest extends PublicRequest
 {
-    /** @return array<string, array<int, mixed>> */
     public function rules(): array
     {
         return [
@@ -23,7 +22,6 @@ class LoginRequest extends PublicRequest
         throw new UnauthorizedHttpException();
     }
 
-    /** @return array<string, string> */
     public function messages(): array
     {
         return array_merge(

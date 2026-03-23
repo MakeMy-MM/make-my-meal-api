@@ -83,10 +83,31 @@ description: Enforce the following architectural conventions, class responsibili
 - Les collections utilisent la structure `{ count, items }`.
 - Le controller construit les Resources via la chaîne fluide : `(new Resource($model))->additional([...])->response()->setStatusCode(...)`.
 
-## Authentification (Sanctum)
+## Authentification (Passport + Refresh Token custom)
 
-- Laravel Sanctum avec tokens personnels.
-- Le model `User` utilise le trait `HasApiTokens`.
-- La création de token se fait dans le **Controller** (pas dans le Service).
-- Le token est ajouté via `additional()` sur la Resource.
-- Nom du token : `'auth-token'`.
+### Système dual-token
+
+- **Access token** : JWT Passport via personal access grant, TTL court (configurable via `config('auth.tokens.access.expiration')`).
+- **Refresh token** : token opaque custom, hashé en DB (algo configurable via `config('auth.tokens.refresh.hash_algo')`), TTL long (configurable via `config('auth.tokens.refresh.expiration')`).
+- Les deux tokens sont toujours créés ensemble via `TokenService::create()` qui retourne un `TokenDTO`.
+- La réponse JSON utilise `TokenResource` wrappée dans `tokens` via `additional()` sur la `UserResource`.
+- L'endpoint `/refresh` retourne uniquement les tokens (pas de user).
+
+### Configuration
+
+- Le guard API est configuré dans `config/auth.php` avec le driver `passport`.
+- Les TTL et l'algo de hash sont dans `config('auth.tokens')`.
+- Le TTL Passport est appliqué dans `AuthServiceProvider::boot()`.
+- Les migrations Passport utilisent `foreignUuid` pour `user_id` (UUID).
+
+### Model User
+
+- Implémente `OAuthenticatable` et utilise le trait `HasApiTokens` de Passport.
+- Ne contient **pas** de logique de création de token — c'est le `TokenService` qui appelle `$user->createToken('access')`.
+
+### Model RefreshToken
+
+- Placé dans `Auth/Models/` (concern auth, pas user).
+- Pas de `$timestamps = false` (a besoin de `created_at` pour le suivi).
+- `isExpired()` vérifie l'expiration.
+- Supprimé physiquement (pas de soft delete ni révocation).

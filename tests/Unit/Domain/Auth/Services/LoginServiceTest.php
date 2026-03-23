@@ -25,7 +25,8 @@ class LoginServiceTest extends TestUnitCase
         $userRepository
             ->expects($this->once())
             ->method('findFirstByFields')
-            ->willReturn($user);
+            ->willReturn($user)
+        ;
 
         $service = $this->getLoginService($userRepository);
         $result = $service->login($dto);
@@ -41,7 +42,8 @@ class LoginServiceTest extends TestUnitCase
         $userRepository
             ->expects($this->once())
             ->method('findFirstByFields')
-            ->willReturn(null);
+            ->willReturn(null)
+        ;
 
         $this->expectException(UnauthorizedHttpException::class);
 
@@ -60,7 +62,8 @@ class LoginServiceTest extends TestUnitCase
         $userRepository
             ->expects($this->once())
             ->method('findFirstByFields')
-            ->willReturn($user);
+            ->willReturn($user)
+        ;
 
         $this->expectException(UnauthorizedHttpException::class);
 

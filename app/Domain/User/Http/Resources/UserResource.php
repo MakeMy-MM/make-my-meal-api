@@ -10,7 +10,6 @@ class UserResource extends BasicResource
 {
     public static $wrap = 'user';
 
-    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         return [

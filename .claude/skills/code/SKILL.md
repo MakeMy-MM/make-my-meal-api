@@ -265,10 +265,39 @@ class {Entité}Controller extends Controller
 }
 ```
 
+**Controller Auth (login/register) :**
+
+```php
+public function login(LoginRequest $request): JsonResponse
+{
+    $input = LoginInput::fromRequest($request, []);
+    $user = $this->loginService->login($input);
+    $tokenDTO = $this->tokenService->create($user);
+
+    return (new UserResource($user))
+        ->additional([TokenResource::$wrap => (new TokenResource($tokenDTO))->resolve()])
+        ->response()
+        ->setStatusCode(Response::HTTP_OK)
+    ;
+}
+
+public function refresh(RefreshRequest $request): JsonResponse
+{
+    // ... validation du refresh token ...
+
+    return (new TokenResource($tokenDTO))
+        ->nowrap()
+        ->response()
+        ->setStatusCode(Response::HTTP_OK)
+    ;
+}
+```
+
 - Le controller injecte les **interfaces** des services, pas les implémentations.
 - Un service par action injecté dans le constructeur.
-- La création de token Sanctum se fait dans le Controller (pas le Service).
-- Token ajouté via `->additional(['token' => $token->plainTextToken])`.
+- Les tokens (access + refresh) sont créés via `TokenServiceInterface::create()` qui retourne un `TokenDTO`.
+- Les tokens sont ajoutés via `->additional([TokenResource::$wrap => new TokenResource($tokenDTO)])`.
+- L'endpoint `/refresh` retourne uniquement `TokenResource` avec `->nowrap()` (pas de `UserResource`).
 
 ### Request
 
@@ -281,12 +310,12 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 class Create{Entité}Request extends PublicRequest
 {
-    /** @return array<string, ValidationRule|array<mixed>|string> */
+    /** @return array<string, array<int, mixed>> */
     public function rules(): array
     {
-        return $this->requiredRules([
-            {Entité}RequestRule::NAME,
-        ]);
+        return [
+            {Entité}RequestRule::NAME->value => $this->requiredRules({Entité}RequestRule::NAME->rules()),
+        ];
     }
 
     /** @return array<string, string> */

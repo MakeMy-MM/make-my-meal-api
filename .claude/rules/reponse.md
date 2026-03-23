@@ -7,7 +7,10 @@ description: Enforce the following API response formatting conventions, JSON str
 - Les Resources unitaires étendent `BasicResource` (élément global dans `app/Http/Resources/`).
 - Les ResourceCollections étendent `BasicResourceCollection` (élément global dans `app/Http/Resources/`).
 - `BasicResource` et `BasicResourceCollection` définissent `$wrap = null` par défaut et fournissent une méthode `nowrap()`.
+- `nowrap()` est instance-level : il désactive le wrap pour cette instance sans affecter les autres (le `$wrap` statique est temporairement mis à `null` puis restauré dans `toResponse()`).
 - Chaque Resource de domaine peut overrider `$wrap` avec le nom de la ressource (ex: `$wrap = 'ingredient'`).
+- Quand une Resource est utilisée via `additional()` sur une autre Resource, utiliser `Resource::$wrap` comme clé et `new Resource()` pour le contenu.
+- Quand une Resource est retournée directement sans wrap, appeler `->nowrap()` avant `->response()`.
 
 ## Structure de la Réponse
 

@@ -42,6 +42,11 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
     ],
 
     /*
@@ -66,11 +71,6 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
     ],
 
     /*
@@ -113,5 +113,27 @@ return [
     */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tokens
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for access and refresh tokens used by the API.
+    | Access tokens are Passport JWTs. Refresh tokens are opaque
+    | tokens stored hashed in the database.
+    |
+    */
+
+    'tokens' => [
+        'access' => [
+            'expiration' => env('AUTH_ACCESS_TOKEN_EXPIRATION', 30), // minutes
+        ],
+
+        'refresh' => [
+            'expiration' => env('AUTH_REFRESH_TOKEN_EXPIRATION', 10080), // minutes (7 days)
+            'hash_algo' => env('AUTH_REFRESH_TOKEN_HASH_ALGO', 'sha256'),
+        ],
+    ],
 
 ];

@@ -33,6 +33,7 @@ return (new Config())
         'fully_qualified_strict_types' => true,
         'function_typehint_space' => true,
         'method_argument_space' => ['on_multiline' => 'ensure_fully_multiline'],
+        'multiline_whitespace_before_semicolons' => ['strategy' => 'new_line_for_chained_calls'],
         'no_unused_imports' => true,
         'not_operator_with_successor_space' => false,
         'nullable_type_declaration_for_default_null_value' => true,

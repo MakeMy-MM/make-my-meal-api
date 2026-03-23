@@ -27,7 +27,8 @@ class RegisterServiceTest extends TestUnitCase
             ->expects($this->once())
             ->method('create')
             ->with($dto)
-            ->willReturn($user);
+            ->willReturn($user)
+        ;
 
         $service = $this->getRegisterService($userRepository);
         $result = $service->register($dto);
@@ -46,7 +47,8 @@ class RegisterServiceTest extends TestUnitCase
         $userRepository
             ->expects($this->once())
             ->method('create')
-            ->willThrowException(new InternalServerErrorHttpException());
+            ->willThrowException(new InternalServerErrorHttpException())
+        ;
 
         $this->expectException(InternalServerErrorHttpException::class);
 

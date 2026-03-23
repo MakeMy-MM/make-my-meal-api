@@ -7,7 +7,6 @@ use App\Http\Requests\PublicRequest;
 
 class RegisterRequest extends PublicRequest
 {
-    /** @return array<string, array<int, mixed>> */
     public function rules(): array
     {
         return [
@@ -16,7 +15,6 @@ class RegisterRequest extends PublicRequest
         ];
     }
 
-    /** @return array<string, string> */
     public function messages(): array
     {
         return array_merge(

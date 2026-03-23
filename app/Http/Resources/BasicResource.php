@@ -2,16 +2,22 @@
 
 namespace App\Http\Resources;
 
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class BasicResource extends JsonResource
+abstract class BasicResource extends JsonResource
 {
-    public static $wrap = null;
+    /** @var string */
+    public static $wrap = 'data';
 
-    public function nowrap(): static
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>|Arrayable<string, mixed>|\JsonSerializable
+     */
+    public function toArray(Request $request): array|Arrayable|\JsonSerializable
     {
-        static::$wrap = null;
-
-        return $this;
+        return parent::toArray($request);
     }
 }

@@ -73,6 +73,16 @@ $this->service->create(
 - `concat_space` : un espace autour de l'opérateur de concaténation (`. `).
 - `not_operator_with_successor_space` : **pas d'espace** après `!` (`!$value`).
 - `blank_line_before_statement` : ligne vide avant chaque `return`.
+- `multiline_whitespace_before_semicolons` : le `;` est sur sa propre ligne dans les appels chaînés multi-lignes.
+
+```php
+// Chaîne fluide multi-ligne : ; sur nouvelle ligne
+return (new UserResource($user))
+    ->additional([...])
+    ->response()
+    ->setStatusCode(Response::HTTP_CREATED)
+;
+```
 
 ### Casing des tests
 
