@@ -3,12 +3,14 @@
 namespace App\Domain\Auth\Http\Controllers;
 
 use App\Domain\Auth\Http\Requests\LoginRequest;
+use App\Domain\Auth\Http\Requests\LogoutRequest;
 use App\Domain\Auth\Http\Requests\RefreshRequest;
 use App\Domain\Auth\Http\Requests\RegisterRequest;
 use App\Domain\Auth\Http\Resources\TokenResource;
 use App\Domain\Auth\Inputs\LoginInput;
 use App\Domain\Auth\Inputs\RegisterInput;
 use App\Domain\Auth\Services\LoginServiceInterface;
+use App\Domain\Auth\Services\LogoutServiceInterface;
 use App\Domain\Auth\Services\RegisterServiceInterface;
 use App\Domain\Auth\Services\TokenServiceInterface;
 use App\Domain\User\Http\Resources\UserResource;
@@ -16,6 +18,7 @@ use App\Domain\User\Models\User;
 use App\Http\Exceptions\UnauthorizedHttpException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthController
@@ -23,6 +26,7 @@ class AuthController
     public function __construct(
         private readonly RegisterServiceInterface $registerService,
         private readonly LoginServiceInterface $loginService,
+        private readonly LogoutServiceInterface $logoutService,
         private readonly TokenServiceInterface $tokenService,
     ) {}
 
@@ -54,6 +58,31 @@ class AuthController
             ->response()
             ->setStatusCode(Response::HTTP_OK)
         ;
+    }
+
+    public function logout(LogoutRequest $request): HttpResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $accessToken = $user->token();
+
+        if (!$accessToken instanceof \Laravel\Passport\AccessToken) {
+            throw new UnauthorizedHttpException();
+        }
+
+        /** @var string $plainToken */
+        $plainToken = $request->validated('refresh_token');
+
+        $refreshToken = $this->tokenService->findValidRefreshToken($plainToken);
+
+        if ($refreshToken === null || $refreshToken->user_id !== $user->id) {
+            throw new UnauthorizedHttpException();
+        }
+
+        $this->logoutService->logout($accessToken, $refreshToken);
+
+        return response()->noContent();
     }
 
     public function me(Request $request): JsonResponse

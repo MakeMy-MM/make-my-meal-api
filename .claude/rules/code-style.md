@@ -88,6 +88,10 @@ return (new UserResource($user))
 
 - Les méthodes de tests PHPUnit utilisent le **camelCase** (`testCreateReturnsIngredient`).
 
+### Commentaires de section
+
+- Ne pas utiliser de commentaires de section type `// --- SECTION ---` dans le code.
+
 ## Assertions avec webmozart/assert
 
 - La librairie `webmozart/assert` est utilisée pour les assertions de type et de valeur dans le code applicatif (pas seulement les tests).

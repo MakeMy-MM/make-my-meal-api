@@ -1,3 +1,5 @@
+.PHONY: up up-build down restart logs bash install migrate migrate-rollback migrate-refresh seed fresh artisan test test-debug format format-fix analyse hooks
+
 COMPOSE := docker compose --env-file .env -f docker/dev/compose.yaml
 APP := $(COMPOSE) exec -e XDEBUG_MODE=off app
 

@@ -86,9 +86,11 @@ $this->getLoggedClient()->get('/auth/me');
 - Nommage des tests unitaires : `testNomFonctionCasCeQueCaDoitFaire`.
   - Succès : `testCreateReturnsIngredient`, `testGetByUserReturnsCollection`.
   - Exception : `testCreateThrowsInternalServerErrorHttpException`.
-- Nommage des tests d'intégration : `testMéthodeHTTPNomActionCasRéponseAttendue`.
+- Nommage des tests d'intégration : `test{Method}{Action}With{Condition}Returns{HttpCode}`.
+  - La partie `With{Condition}` est optionnelle (omise pour le cas nominal).
   - Succès : `testPostRegisterReturnsCreated`, `testGetIndexReturnsSuccess`.
-  - Erreur : `testPostRegisterReturnUnprocessableEntity`, `testGetShowReturnsNotFound`.
+  - Erreur : `testPostRegisterWithEmptyBodyReturnsUnprocessableEntity`, `testGetShowWithInvalidIdReturnsNotFound`, `testPostLogoutWithoutAccessTokenReturnsUnauthorized`, `testPostLogoutWithAlreadyUsedTokenReturnsUnauthorized`.
+- Ordre des tests par route : **Success → Unauthorized → Without body → reste** (cas spécifiques).
 - Les tests d'intégration d'un même controller sont regroupés dans un seul fichier.
 - Les méthodes helper privées sont placées **après** les tests.
 - La structure des dossiers de tests reflète la structure des domaines métier.

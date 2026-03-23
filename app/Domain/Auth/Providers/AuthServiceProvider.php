@@ -4,6 +4,8 @@ namespace App\Domain\Auth\Providers;
 
 use App\Domain\Auth\Services\LoginService;
 use App\Domain\Auth\Services\LoginServiceInterface;
+use App\Domain\Auth\Services\LogoutService;
+use App\Domain\Auth\Services\LogoutServiceInterface;
 use App\Domain\Auth\Services\RegisterService;
 use App\Domain\Auth\Services\RegisterServiceInterface;
 use App\Domain\Auth\Services\TokenService;
@@ -18,6 +20,7 @@ class AuthServiceProvider extends ServiceProvider
     public array $bindings = [
         RegisterServiceInterface::class => RegisterService::class,
         LoginServiceInterface::class => LoginService::class,
+        LogoutServiceInterface::class => LogoutService::class,
         TokenServiceInterface::class => TokenService::class,
     ];
 

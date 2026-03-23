@@ -7,8 +7,6 @@ use Tests\Feature\TestFeatureCase;
 
 class AuthControllerTest extends TestFeatureCase
 {
-    // --- REGISTER ---
-
     public function testPostRegisterReturnsCreated(): void
     {
         $response = $this->getClient()->post('/auth/register', $this->validPostRegisterPayload());
@@ -28,15 +26,13 @@ class AuthControllerTest extends TestFeatureCase
         ]);
     }
 
-    public function testPostRegisterReturnsUnprocessableEntity(): void
+    public function testPostRegisterWithEmptyBodyReturnsUnprocessableEntity(): void
     {
         $response = $this->getClient()->post('/auth/register', []);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
         $response->assertJsonFragment(['message' => 'Validation error']);
     }
-
-    // --- LOGIN ---
 
     public function testPostLoginReturnsSuccess(): void
     {
@@ -52,18 +48,9 @@ class AuthControllerTest extends TestFeatureCase
         ]);
     }
 
-    public function testPostLoginReturnsUnauthorizedWhenBodyEmpty(): void
+    public function testPostLoginWithEmptyBodyReturnsUnauthorized(): void
     {
         $response = $this->getClient()->post('/auth/login', []);
-
-        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
-    }
-
-    // --- ME ---
-
-    public function testGetMeReturnsUnauthorized(): void
-    {
-        $response = $this->getClient()->get('/auth/me');
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
@@ -82,7 +69,60 @@ class AuthControllerTest extends TestFeatureCase
         $response->assertJsonMissingPath('tokens');
     }
 
-    // --- REFRESH ---
+    public function testGetMeWithoutAccessTokenReturnsUnauthorized(): void
+    {
+        $response = $this->getClient()->get('/auth/me');
+
+        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testPostLogoutReturnsNoContent(): void
+    {
+        $loginResponse = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());
+        $refreshToken = $loginResponse->json('tokens.refresh_token.token');
+
+        $response = $this->getLoggedClient(['email' => 'user@example.com'])->post('/auth/logout', ['refresh_token' => $refreshToken]);
+
+        $response->assertStatus(Response::HTTP_NO_CONTENT);
+    }
+
+    public function testPostLogoutWithoutAccessTokenReturnsUnauthorized(): void
+    {
+        $response = $this->getClient()->post('/auth/logout', ['refresh_token' => 'some-token']);
+
+        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testPostLogoutWithEmptyBodyReturnsUnprocessableEntity(): void
+    {
+        $response = $this->getLoggedClient(['email' => 'user@example.com'])->post('/auth/logout', []);
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
+    public function testPostLogoutWithOtherUserRefreshTokenReturnsUnauthorized(): void
+    {
+        $loginResponse = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());
+        $refreshToken = $loginResponse->json('tokens.refresh_token.token');
+
+        $response = $this->getLoggedClient()->post('/auth/logout', ['refresh_token' => $refreshToken]);
+
+        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testPostLogoutWithAlreadyUsedTokenReturnsUnauthorized(): void
+    {
+        $loginResponse = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());
+        $refreshToken = $loginResponse->json('tokens.refresh_token.token');
+
+        $this->getLoggedClient(['email' => 'user@example.com'])->post('/auth/logout', ['refresh_token' => $refreshToken])
+            ->assertStatus(Response::HTTP_NO_CONTENT)
+        ;
+
+        $response = $this->getLoggedClient(['email' => 'user@example.com'])->post('/auth/logout', ['refresh_token' => $refreshToken]);
+
+        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
 
     public function testPostRefreshReturnsSuccess(): void
     {
@@ -101,14 +141,21 @@ class AuthControllerTest extends TestFeatureCase
         $this->assertNotEquals($refreshToken, $newRefreshToken);
     }
 
-    public function testPostRefreshReturnsUnauthorizedWhenTokenInvalid(): void
+    public function testPostRefreshWithInvalidTokenReturnsUnauthorized(): void
     {
         $response = $this->getClient()->post('/auth/refresh', ['refresh_token' => 'invalid-token']);
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
 
-    public function testPostRefreshReturnsUnauthorizedWhenTokenAlreadyUsed(): void
+    public function testPostRefreshWithEmptyBodyReturnsUnprocessableEntity(): void
+    {
+        $response = $this->getClient()->post('/auth/refresh', []);
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
+    public function testPostRefreshWithAlreadyUsedTokenReturnsUnauthorized(): void
     {
         $loginResponse = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());
         $refreshToken = $loginResponse->json('tokens.refresh_token.token');
@@ -121,15 +168,6 @@ class AuthControllerTest extends TestFeatureCase
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
-
-    public function testPostRefreshReturnsUnprocessableEntityWhenBodyEmpty(): void
-    {
-        $response = $this->getClient()->post('/auth/refresh', []);
-
-        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
-    }
-
-    // --- Helpers ---
 
     /** @return array<int, string> */
     private function userStructure(): array

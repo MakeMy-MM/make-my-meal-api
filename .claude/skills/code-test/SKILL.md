@@ -67,21 +67,21 @@ class {Entité}Seeder extends Seeder
 
 ### Cas minimum par route
 
-Chaque route **doit** avoir au minimum ces 3 tests :
+Chaque route **doit** avoir au minimum ces 3 tests, **dans cet ordre** :
 
-| Cas | Code HTTP | Description |
-|-----|-----------|-------------|
-| Unauthorized | 401 | Requête sans token d'authentification |
-| Forbidden | 403 | Requête avec token mais l'utilisateur n'est pas propriétaire de la ressource |
-| Success | 2XX | Requête valide avec le bon utilisateur |
+| Ordre | Cas | Code HTTP | Description |
+|-------|-----|-----------|-------------|
+| 1 | Success | 2XX | Requête valide avec le bon utilisateur |
+| 2 | Unauthorized | 401 | Requête sans token d'authentification |
+| 3 | Forbidden | 403 | Requête avec token mais l'utilisateur n'est pas propriétaire de la ressource |
 
-### Cas supplémentaires selon le contexte
+### Cas supplémentaires selon le contexte (après les 3 cas minimum)
 
-| Cas | Code HTTP | Quand l'ajouter |
-|-----|-----------|-----------------|
-| Validation error | 422 | Route avec payload (POST, PATCH, PUT) — **un seul test** avec body vide pour vérifier que la validation se déclenche. Le détail des règles est testé unitairement sur la Request. |
-| Not found | 404 | Route avec paramètre de ressource (UUID invalide ou inexistant) |
-| Conflict / Business error | 4XX | Règle métier spécifique |
+| Ordre | Cas | Code HTTP | Quand l'ajouter |
+|-------|-----|-----------|-----------------|
+| 4 | Validation error | 422 | Route avec payload (POST, PATCH, PUT) — **un seul test** avec body vide pour vérifier que la validation se déclenche. Le détail des règles est testé unitairement sur la Request. |
+| 5+ | Not found | 404 | Route avec paramètre de ressource (UUID invalide ou inexistant) |
+| 5+ | Conflict / Business error | 4XX | Règle métier spécifique |
 
 ### Client HTTP obligatoire
 
@@ -111,24 +111,6 @@ class {Entité}ControllerTest extends TestFeatureCase
 {
     // --- CREATE ---
 
-    public function testPostCreateReturnsUnauthorized(): void
-    {
-        $user = User::where('email', 'user@example.com')->firstOrFail();
-
-        $response = $this->getClient()->post("/users/{$user->id}/{entités}", $this->validCreateBody());
-
-        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
-    }
-
-    public function testPostCreateReturnsForbidden(): void
-    {
-        $owner = User::where('email', 'user@example.com')->firstOrFail();
-
-        $response = $this->getLoggedClient()->post("/users/{$owner->id}/{entités}", $this->validCreateBody());
-
-        $response->assertStatus(Response::HTTP_FORBIDDEN);
-    }
-
     public function testPostCreateReturnsCreated(): void
     {
         $user = User::where('email', 'user@example.com')->firstOrFail();
@@ -138,7 +120,25 @@ class {Entité}ControllerTest extends TestFeatureCase
         $response->assertStatus(Response::HTTP_CREATED);
     }
 
-    public function testPostCreateReturnsUnprocessableEntity(): void
+    public function testPostCreateWithoutAccessTokenReturnsUnauthorized(): void
+    {
+        $user = User::where('email', 'user@example.com')->firstOrFail();
+
+        $response = $this->getClient()->post("/users/{$user->id}/{entités}", $this->validCreateBody());
+
+        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testPostCreateWithOtherUserReturnsForbidden(): void
+    {
+        $owner = User::where('email', 'user@example.com')->firstOrFail();
+
+        $response = $this->getLoggedClient()->post("/users/{$owner->id}/{entités}", $this->validCreateBody());
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN);
+    }
+
+    public function testPostCreateWithEmptyBodyReturnsUnprocessableEntity(): void
     {
         $user = User::where('email', 'user@example.com')->firstOrFail();
 
@@ -149,22 +149,22 @@ class {Entité}ControllerTest extends TestFeatureCase
 
     // --- SHOW ---
 
-    public function testGetShowReturnsUnauthorized(): void
-    {
-        // ...
-    }
-
-    public function testGetShowReturnsForbidden(): void
-    {
-        // ...
-    }
-
     public function testGetShowReturnsSuccess(): void
     {
         // ...
     }
 
-    public function testGetShowReturnsNotFound(): void
+    public function testGetShowWithoutAccessTokenReturnsUnauthorized(): void
+    {
+        // ...
+    }
+
+    public function testGetShowWithOtherUserReturnsForbidden(): void
+    {
+        // ...
+    }
+
+    public function testGetShowWithInvalidIdReturnsNotFound(): void
     {
         // ...
     }
@@ -183,9 +183,10 @@ class {Entité}ControllerTest extends TestFeatureCase
 
 ### Nommage
 
-- Format : `test{Méthode}{Action}Returns{Réponse}`
+- Format : `test{Method}{Action}With{Condition}Returns{HttpCode}`
+- La partie `With{Condition}` est optionnelle (omise pour le cas nominal).
 - Succès : `testPostCreateReturnsCreated`, `testGetIndexReturnsSuccess`
-- Erreur : `testPostCreateReturnsUnauthorized`, `testPostCreateReturnsForbidden`, `testPostCreateReturnsUnprocessableEntity`, `testGetShowReturnsNotFound`
+- Erreur : `testPostCreateWithoutAccessTokenReturnsUnauthorized`, `testPostCreateWithEmptyBodyReturnsUnprocessableEntity`, `testGetShowWithInvalidIdReturnsNotFound`, `testPostLogoutWithAlreadyUsedTokenReturnsUnauthorized`
 
 ### Assertions recommandées
 
