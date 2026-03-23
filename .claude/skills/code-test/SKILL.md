@@ -83,6 +83,21 @@ Chaque route **doit** avoir au minimum ces 3 tests :
 | Not found | 404 | Route avec paramètre de ressource (UUID invalide ou inexistant) |
 | Conflict / Business error | 4XX | Règle métier spécifique |
 
+### Client HTTP obligatoire
+
+**Ne jamais appeler `$this->get()`, `$this->post()`, etc. directement.** Toujours passer par `getClient()` (non authentifié) ou `getLoggedClient()` (authentifié) avant chaque appel HTTP. Le client se reset après chaque requête.
+
+```php
+// Non authentifié
+$this->getClient()->post('/auth/login', $payload);
+
+// Authentifié (user seedé)
+$this->getLoggedClient(['email' => 'user@example.com'])->get('/users/me');
+
+// Authentifié (user créé à la volée)
+$this->getLoggedClient()->delete("/users/{$user->id}/{entités}/{$entity->id}");
+```
+
 ### Template
 
 ```php
@@ -100,7 +115,7 @@ class {Entité}ControllerTest extends TestFeatureCase
     {
         $user = User::where('email', 'user@example.com')->firstOrFail();
 
-        $response = $this->post("/users/{$user->id}/{entités}", $this->validCreateBody());
+        $response = $this->getClient()->post("/users/{$user->id}/{entités}", $this->validCreateBody());
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
@@ -108,10 +123,8 @@ class {Entité}ControllerTest extends TestFeatureCase
     public function testPostCreateReturnsForbidden(): void
     {
         $owner = User::where('email', 'user@example.com')->firstOrFail();
-        $other = User::factory()->create();
 
-        $response = $this->actingAs($other)
-            ->post("/users/{$owner->id}/{entités}", $this->validCreateBody());
+        $response = $this->getLoggedClient()->post("/users/{$owner->id}/{entités}", $this->validCreateBody());
 
         $response->assertStatus(Response::HTTP_FORBIDDEN);
     }
@@ -120,8 +133,7 @@ class {Entité}ControllerTest extends TestFeatureCase
     {
         $user = User::where('email', 'user@example.com')->firstOrFail();
 
-        $response = $this->actingAs($user)
-            ->post("/users/{$user->id}/{entités}", $this->validCreateBody());
+        $response = $this->getLoggedClient(['email' => $user->email])->post("/users/{$user->id}/{entités}", $this->validCreateBody());
 
         $response->assertStatus(Response::HTTP_CREATED);
     }
@@ -130,8 +142,7 @@ class {Entité}ControllerTest extends TestFeatureCase
     {
         $user = User::where('email', 'user@example.com')->firstOrFail();
 
-        $response = $this->actingAs($user)
-            ->post("/users/{$user->id}/{entités}", []);
+        $response = $this->getLoggedClient(['email' => $user->email])->post("/users/{$user->id}/{entités}", []);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }

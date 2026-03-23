@@ -501,13 +501,13 @@ class {Entité}Seeder extends Seeder
 
 - Enregistrer dans `DatabaseSeeder::run()` via `$this->call([...])`.
 
-## Tests
-
-Utiliser le skill `/code-test` pour la création de tests (templates, couverture, cas minimum par route).
-
 ## Clean Code
 
 Une fois l'implémentation terminée, invoquer le skill `/clean-code` pour lancer le formatage et l'analyse statique.
+
+## Tests
+
+Une fois le clean code terminé, demander à l'utilisateur si tout est bon pour passer aux tests. Si l'utilisateur demande des modifications, les appliquer, relancer le clean code, puis redemander si c'est bon pour passer aux tests. Répéter jusqu'à validation. Une fois validé, invoquer le skill `/code-test`.
 
 ## Création d'un Aggregate Root avec entités enfants
 

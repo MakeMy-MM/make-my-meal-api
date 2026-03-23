@@ -57,6 +57,21 @@ description: Enforce the following testing strategies, class structures, and nam
 - Préfixe `/api/v1` sur les méthodes HTTP (`get()`, `post()`, `patch()`, `put()`, `delete()`).
 - `post()` utilise `postJson()` en interne.
 - Fournit `RefreshDatabase` — ne pas le re-déclarer dans les tests.
+- **Obligation d'utiliser `getClient()` ou `getLoggedClient()` avant chaque appel HTTP.** Appeler `$this->get()` directement lève une `LogicException`.
+  - `getClient()` : requête non authentifiée.
+  - `getLoggedClient(array $attributes)` : requête authentifiée avec un access token Passport. Récupère le user par email ou le crée via factory.
+  - Le client se reset après chaque appel HTTP (un `getClient()` / `getLoggedClient()` par requête).
+
+```php
+// Non authentifié
+$this->getClient()->post('/auth/login', $payload);
+
+// Authentifié (user seedé)
+$this->getLoggedClient(['email' => 'user@example.com'])->get('/auth/me');
+
+// Authentifié (user créé à la volée)
+$this->getLoggedClient()->get('/auth/me');
+```
 
 ### TestUnitCase
 

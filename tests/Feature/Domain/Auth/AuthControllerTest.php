@@ -11,7 +11,7 @@ class AuthControllerTest extends TestFeatureCase
 
     public function testPostRegisterReturnsCreated(): void
     {
-        $response = $this->post('/auth/register', $this->validPostRegisterPayload());
+        $response = $this->getClient()->post('/auth/register', $this->validPostRegisterPayload());
 
         $response->assertStatus(Response::HTTP_CREATED);
         $response->assertJsonStructure([
@@ -30,7 +30,7 @@ class AuthControllerTest extends TestFeatureCase
 
     public function testPostRegisterReturnsUnprocessableEntity(): void
     {
-        $response = $this->post('/auth/register', []);
+        $response = $this->getClient()->post('/auth/register', []);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
         $response->assertJsonFragment(['message' => 'Validation error']);
@@ -40,7 +40,7 @@ class AuthControllerTest extends TestFeatureCase
 
     public function testPostLoginReturnsSuccess(): void
     {
-        $response = $this->post('/auth/login', $this->validPostLoginPayload());
+        $response = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());
 
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJsonStructure([
@@ -54,19 +54,42 @@ class AuthControllerTest extends TestFeatureCase
 
     public function testPostLoginReturnsUnauthorizedWhenBodyEmpty(): void
     {
-        $response = $this->post('/auth/login', []);
+        $response = $this->getClient()->post('/auth/login', []);
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    // --- ME ---
+
+    public function testGetMeReturnsUnauthorized(): void
+    {
+        $response = $this->getClient()->get('/auth/me');
+
+        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testGetMeReturnsSuccess(): void
+    {
+        $response = $this->getLoggedClient(['email' => 'user@example.com'])->get('/auth/me');
+
+        $response->assertStatus(Response::HTTP_OK);
+        $response->assertJsonStructure([
+            'user' => $this->userStructure(),
+        ]);
+        $response->assertJsonFragment([
+            'email' => 'user@example.com',
+        ]);
+        $response->assertJsonMissingPath('tokens');
     }
 
     // --- REFRESH ---
 
     public function testPostRefreshReturnsSuccess(): void
     {
-        $loginResponse = $this->post('/auth/login', $this->validPostLoginPayload());
+        $loginResponse = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());
         $refreshToken = $loginResponse->json('tokens.refresh_token.token');
 
-        $response = $this->post('/auth/refresh', ['refresh_token' => $refreshToken]);
+        $response = $this->getClient()->post('/auth/refresh', ['refresh_token' => $refreshToken]);
 
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJsonStructure([
@@ -80,28 +103,28 @@ class AuthControllerTest extends TestFeatureCase
 
     public function testPostRefreshReturnsUnauthorizedWhenTokenInvalid(): void
     {
-        $response = $this->post('/auth/refresh', ['refresh_token' => 'invalid-token']);
+        $response = $this->getClient()->post('/auth/refresh', ['refresh_token' => 'invalid-token']);
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
 
     public function testPostRefreshReturnsUnauthorizedWhenTokenAlreadyUsed(): void
     {
-        $loginResponse = $this->post('/auth/login', $this->validPostLoginPayload());
+        $loginResponse = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());
         $refreshToken = $loginResponse->json('tokens.refresh_token.token');
 
-        $this->post('/auth/refresh', ['refresh_token' => $refreshToken])
+        $this->getClient()->post('/auth/refresh', ['refresh_token' => $refreshToken])
             ->assertStatus(Response::HTTP_OK)
         ;
 
-        $response = $this->post('/auth/refresh', ['refresh_token' => $refreshToken]);
+        $response = $this->getClient()->post('/auth/refresh', ['refresh_token' => $refreshToken]);
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
 
     public function testPostRefreshReturnsUnprocessableEntityWhenBodyEmpty(): void
     {
-        $response = $this->post('/auth/refresh', []);
+        $response = $this->getClient()->post('/auth/refresh', []);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
