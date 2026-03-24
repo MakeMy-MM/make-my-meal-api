@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Domain\Ingredient;
 
+use Database\Seeders\IngredientSeeder;
 use Database\Seeders\UserSeeder;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Feature\TestFeatureCase;
@@ -94,6 +95,53 @@ class IngredientControllerTest extends TestFeatureCase
         $response->assertJsonFragment(['message' => 'Validation error']);
     }
 
+    public function testPatchUpdateAsOwnerReturnsOk(): void
+    {
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->patch('/users/' . UserSeeder::USER_ID . '/ingredients/' . IngredientSeeder::TOMATE_ID, $this->validUpdateBody())
+        ;
+
+        $response->assertStatus(Response::HTTP_OK);
+        $response->assertJsonStructure([
+            'ingredient' => $this->ingredientStructure(),
+        ]);
+        $response->assertJsonFragment([
+            'name' => 'Tomate cerise',
+        ]);
+
+        $this->assertDatabaseHas('ingredients', [
+            'id' => IngredientSeeder::TOMATE_ID,
+            'name' => 'Tomate cerise',
+        ]);
+    }
+
+    public function testPatchUpdateAsNotOwnerReturnsForbidden(): void
+    {
+        $response = $this->getLoggedClient()
+            ->patch('/users/' . UserSeeder::USER_ID . '/ingredients/' . IngredientSeeder::TOMATE_ID, $this->validUpdateBody())
+        ;
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN);
+    }
+
+    public function testPatchUpdateAnonymouslyReturnsUnauthorized(): void
+    {
+        $response = $this->getClient()
+            ->patch('/users/' . UserSeeder::USER_ID . '/ingredients/' . IngredientSeeder::TOMATE_ID, $this->validUpdateBody())
+        ;
+
+        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testPatchUpdateWithInvalidIdReturnsNotFound(): void
+    {
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->patch('/users/' . UserSeeder::USER_ID . '/ingredients/00000000-0000-0000-0000-000000000000', $this->validUpdateBody())
+        ;
+
+        $response->assertStatus(Response::HTTP_NOT_FOUND);
+    }
+
     /** @return array<int, string> */
     private function ingredientStructure(): array
     {
@@ -106,6 +154,14 @@ class IngredientControllerTest extends TestFeatureCase
         return [
             'name' => 'Basilic',
             'unit' => 'g',
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function validUpdateBody(): array
+    {
+        return [
+            'name' => 'Tomate cerise',
         ];
     }
 }

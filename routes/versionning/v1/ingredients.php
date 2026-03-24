@@ -6,4 +6,8 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('users/{user}/ingredients')->middleware('auth:api')->group(function () {
     Route::get('/', [IngredientController::class, 'index']);
     Route::post('/', [IngredientController::class, 'create']);
+
+    Route::prefix('{ingredient}')->group(function () {
+        Route::patch('/', [IngredientController::class, 'update']);
+    });
 });

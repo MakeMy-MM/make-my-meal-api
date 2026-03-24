@@ -4,6 +4,7 @@ namespace App\Domain\Ingredient\Services;
 
 use App\Domain\Ingredient\DTOs\CreateIngredientDTO;
 use App\Domain\Ingredient\DTOs\FieldsIngredientDTO;
+use App\Domain\Ingredient\DTOs\UpdateIngredientDTO;
 use App\Domain\Ingredient\Models\Ingredient;
 use App\Domain\Ingredient\Repositories\IngredientRepository;
 use App\Domain\User\Models\User;
@@ -22,6 +23,23 @@ class IngredientService implements IngredientServiceInterface
 
         try {
             $result = $this->repository->create($dto);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            throw $e;
+        }
+
+        DB::commit();
+
+        return $result;
+    }
+
+    public function update(UpdateIngredientDTO $dto): Ingredient
+    {
+        DB::beginTransaction();
+
+        try {
+            $result = $this->repository->update($dto);
         } catch (\Throwable $e) {
             DB::rollBack();
 

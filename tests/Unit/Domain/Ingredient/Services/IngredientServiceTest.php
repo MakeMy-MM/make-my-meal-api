@@ -3,6 +3,7 @@
 namespace Tests\Unit\Domain\Ingredient\Services;
 
 use App\Domain\Ingredient\DTOs\CreateIngredientDTO;
+use App\Domain\Ingredient\DTOs\UpdateIngredientDTO;
 use App\Domain\Ingredient\Models\Ingredient;
 use App\Domain\Ingredient\Repositories\IngredientRepository;
 use App\Domain\Ingredient\Services\IngredientService;
@@ -58,6 +59,48 @@ class IngredientServiceTest extends TestUnitCase
         $service->create($dto);
     }
 
+    public function testUpdateReturnsIngredient(): void
+    {
+        DB::shouldReceive('beginTransaction')->once()->andReturnNull();
+        DB::shouldReceive('commit')->once()->andReturnNull();
+
+        $dto = $this->getUpdateIngredientDTO();
+        $ingredient = $this->getIngredient();
+        $repository = $this->getIngredientRepository();
+
+        $repository
+            ->expects($this->once())
+            ->method('update')
+            ->with($dto)
+            ->willReturn($ingredient)
+        ;
+
+        $service = $this->getIngredientService($repository);
+        $result = $service->update($dto);
+
+        $this->assertSame($ingredient, $result);
+    }
+
+    public function testUpdateThrowsInternalServerErrorHttpException(): void
+    {
+        DB::shouldReceive('beginTransaction')->once()->andReturnNull();
+        DB::shouldReceive('rollBack')->once()->andReturnNull();
+
+        $dto = $this->getUpdateIngredientDTO();
+        $repository = $this->getIngredientRepository();
+
+        $repository
+            ->expects($this->once())
+            ->method('update')
+            ->willThrowException(new InternalServerErrorHttpException())
+        ;
+
+        $this->expectException(InternalServerErrorHttpException::class);
+
+        $service = $this->getIngredientService($repository);
+        $service->update($dto);
+    }
+
     public function testGetByUserReturnsCollection(): void
     {
         $user = $this->getUser();
@@ -93,6 +136,11 @@ class IngredientServiceTest extends TestUnitCase
     private function getCreateIngredientDTO(): CreateIngredientDTO&MockObject
     {
         return $this->createMock(CreateIngredientDTO::class);
+    }
+
+    private function getUpdateIngredientDTO(): UpdateIngredientDTO&MockObject
+    {
+        return $this->createMock(UpdateIngredientDTO::class);
     }
 
     private function getUser(

@@ -3,6 +3,7 @@
 namespace App\Domain\Ingredient\Repositories;
 
 use App\Domain\Ingredient\DTOs\CreateIngredientDTO;
+use App\Domain\Ingredient\DTOs\UpdateIngredientDTO;
 use App\Domain\Ingredient\Models\Ingredient;
 use App\DTOs\BaseFieldDTO;
 use App\Http\Exceptions\InternalServerErrorHttpException;
@@ -25,9 +26,24 @@ class IngredientRepository extends ModelRepository
     public function create(CreateIngredientDTO $dto): Ingredient
     {
         try {
-            return Ingredient::create($dto->toArray());
+            $ingredient = Ingredient::create($dto->toArray());
         } catch (\Throwable $e) {
             throw new InternalServerErrorHttpException(previous: $e);
         }
+
+        return $ingredient;
+    }
+
+    public function update(UpdateIngredientDTO $dto): Ingredient
+    {
+        try {
+            $ingredient = $dto->getModel();
+            $ingredient->fill($dto->toArray());
+            $ingredient->save();
+        } catch (\Throwable $e) {
+            throw new InternalServerErrorHttpException(previous: $e);
+        }
+
+        return $ingredient;
     }
 }
