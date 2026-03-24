@@ -11,6 +11,9 @@ class BasicResourceCollection extends ResourceCollection
 {
     public static $wrap = null;
 
+    /** @var class-string<mixed> */
+    public $collects = BasicResource::class;
+
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {

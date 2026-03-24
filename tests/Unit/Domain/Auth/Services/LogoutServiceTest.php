@@ -18,8 +18,8 @@ class LogoutServiceTest extends TestUnitCase
         DB::shouldReceive('beginTransaction')->once()->andReturnNull();
         DB::shouldReceive('commit')->once()->andReturnNull();
 
-        $refreshTokenModel = $this->getRefreshTokenMock();
-        $accessToken = $this->getAccessTokenMock();
+        $refreshTokenModel = $this->getRefreshToken();
+        $accessToken = $this->getAccessToken();
 
         $tokenService = $this->getTokenService();
         $tokenService
@@ -43,8 +43,8 @@ class LogoutServiceTest extends TestUnitCase
         DB::shouldReceive('beginTransaction')->once()->andReturnNull();
         DB::shouldReceive('rollBack')->once()->andReturnNull();
 
-        $refreshTokenModel = $this->getRefreshTokenMock();
-        $accessToken = $this->getAccessTokenMock();
+        $refreshTokenModel = $this->getRefreshToken();
+        $accessToken = $this->getAccessToken();
 
         $tokenService = $this->getTokenService();
 
@@ -73,7 +73,7 @@ class LogoutServiceTest extends TestUnitCase
         return $this->createMock(TokenServiceInterface::class);
     }
 
-    private function getRefreshTokenMock(
+    private function getRefreshToken(
         string $id = 'fake-uuid',
     ): RefreshToken&MockObject {
         return $this->createConfiguredModelMock(RefreshToken::class, [
@@ -82,7 +82,7 @@ class LogoutServiceTest extends TestUnitCase
     }
 
     /** @return AccessToken<mixed>&MockObject */
-    private function getAccessTokenMock(): AccessToken&MockObject
+    private function getAccessToken(): AccessToken&MockObject
     {
         return $this->createMock(AccessToken::class);
     }

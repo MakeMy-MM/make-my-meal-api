@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Domain\Auth;
 
+use Database\Seeders\UserSeeder;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Feature\TestFeatureCase;
 
@@ -34,7 +35,7 @@ class AuthControllerTest extends TestFeatureCase
         $response->assertJsonFragment(['message' => 'Validation error']);
     }
 
-    public function testPostLoginReturnsSuccess(): void
+    public function testPostLoginReturnsOk(): void
     {
         $response = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());
 
@@ -44,11 +45,11 @@ class AuthControllerTest extends TestFeatureCase
             'tokens' => $this->tokensStructure(),
         ]);
         $response->assertJsonFragment([
-            'email' => 'user@example.com',
+            'email' => UserSeeder::USER_EMAIL,
         ]);
     }
 
-    public function testPostLoginWithEmptyBodyReturnsUnauthorized(): void
+    public function testPostLoginWithInvalidCredentialsReturnsUnauthorized(): void
     {
         $response = $this->getClient()->post('/auth/login', []);
 
@@ -60,12 +61,12 @@ class AuthControllerTest extends TestFeatureCase
         $loginResponse = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());
         $refreshToken = $loginResponse->json('tokens.refresh_token.token');
 
-        $response = $this->getLoggedClient(['email' => 'user@example.com'])->post('/auth/logout', ['refresh_token' => $refreshToken]);
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])->post('/auth/logout', ['refresh_token' => $refreshToken]);
 
         $response->assertStatus(Response::HTTP_NO_CONTENT);
     }
 
-    public function testPostLogoutWithoutAccessTokenReturnsUnauthorized(): void
+    public function testPostLogoutAnonymouslyReturnsUnauthorized(): void
     {
         $response = $this->getClient()->post('/auth/logout', ['refresh_token' => 'some-token']);
 
@@ -74,12 +75,12 @@ class AuthControllerTest extends TestFeatureCase
 
     public function testPostLogoutWithEmptyBodyReturnsUnprocessableEntity(): void
     {
-        $response = $this->getLoggedClient(['email' => 'user@example.com'])->post('/auth/logout', []);
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])->post('/auth/logout', []);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
-    public function testPostLogoutWithOtherUserRefreshTokenReturnsUnauthorized(): void
+    public function testPostLogoutWithNotOwnerRefreshTokenReturnsUnauthorized(): void
     {
         $loginResponse = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());
         $refreshToken = $loginResponse->json('tokens.refresh_token.token');
@@ -94,16 +95,16 @@ class AuthControllerTest extends TestFeatureCase
         $loginResponse = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());
         $refreshToken = $loginResponse->json('tokens.refresh_token.token');
 
-        $this->getLoggedClient(['email' => 'user@example.com'])->post('/auth/logout', ['refresh_token' => $refreshToken])
+        $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])->post('/auth/logout', ['refresh_token' => $refreshToken])
             ->assertStatus(Response::HTTP_NO_CONTENT)
         ;
 
-        $response = $this->getLoggedClient(['email' => 'user@example.com'])->post('/auth/logout', ['refresh_token' => $refreshToken]);
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])->post('/auth/logout', ['refresh_token' => $refreshToken]);
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
 
-    public function testPostRefreshReturnsSuccess(): void
+    public function testPostRefreshReturnsOk(): void
     {
         $loginResponse = $this->getClient()->post('/auth/login', $this->validPostLoginPayload());
         $refreshToken = $loginResponse->json('tokens.refresh_token.token');
@@ -176,7 +177,7 @@ class AuthControllerTest extends TestFeatureCase
     private function validPostLoginPayload(): array
     {
         return [
-            'email' => 'user@example.com',
+            'email' => UserSeeder::USER_EMAIL,
             'password' => 'password',
         ];
     }

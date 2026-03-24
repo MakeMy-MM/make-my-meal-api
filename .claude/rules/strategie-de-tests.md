@@ -24,6 +24,7 @@ description: Enforce the following testing strategies, class structures, and nam
 - Pas de `setUp()` ni de propriétés de classe : chaque dépendance est créée par une **méthode privée** dédiée.
 - **Tout est mocké** sauf le service testé et les classes finales.
 - Les mocks retournent un type intersection (`ClassName&MockObject`).
+- Les noms des méthodes helper ne doivent **pas** contenir `Mock` (ex: `getUser()`, pas `getUserMock()`).
 - Les models sont mockés via `createConfiguredModelMock()` avec des valeurs par défaut.
 - Les façades (`DB`, etc.) sont mockées via `shouldReceive()` avec `once()`.
 - Ordre des méthodes helper privées :
@@ -87,10 +88,17 @@ $this->getLoggedClient()->get('/auth/me');
   - Succès : `testCreateReturnsIngredient`, `testGetByUserReturnsCollection`.
   - Exception : `testCreateThrowsInternalServerErrorHttpException`.
 - Nommage des tests d'intégration : `test{Method}{Action}With{Condition}Returns{HttpCode}`.
-  - La partie `With{Condition}` est optionnelle (omise pour le cas nominal).
-  - Succès : `testPostRegisterReturnsCreated`, `testGetIndexReturnsSuccess`.
-  - Erreur : `testPostRegisterWithEmptyBodyReturnsUnprocessableEntity`, `testGetShowWithInvalidIdReturnsNotFound`, `testPostLogoutWithoutAccessTokenReturnsUnauthorized`, `testPostLogoutWithAlreadyUsedTokenReturnsUnauthorized`.
-- Ordre des tests par route : **Success → Unauthorized → Without body → reste** (cas spécifiques).
+  - La partie `With{Condition}` est optionnelle (omise pour le cas nominal, qui correspond au Owner).
+  - Succès : `testPostCreateAsOwnerReturnsCreated`, `testGetIndexAsOwnerReturnsOk`.
+  - Erreur : `testPostCreateAnonymouslyReturnsUnauthorized`, `testPostCreateAsNotOwnerReturnsForbidden`, `testGetShowWithInvalidIdReturnsNotFound`, `testPostCreateWithEmptyBodyReturnsUnprocessableEntity`.
+- Conditions d'accès standardisées (conventions de nommage) :
+  - `AsOwner` : requête authentifiée avec le propriétaire (`getLoggedClient(['email' => UserSeeder::USER_EMAIL])`) → 2XX.
+  - `Anonymously` : requête non authentifiée (`getClient()`) → 401.
+  - `AsNotOwner` : requête authentifiée mais pas le propriétaire (`getLoggedClient()` sans email du seedé) → 403.
+  - `AsAdmin` : (futur) requête avec un rôle admin.
+- Les 3 tests **obligatoires** pour chaque route protégée : `AsOwner` (2XX), `Anonymously` (401), `AsNotOwner` (403).
+- Les méthodes de test publiques sont **groupées par fonction/route testée** : tous les cas de `create` ensemble, puis tous les cas de `getByUser`, etc.
+- Au sein d'un groupe, l'ordre est : **AsOwner (2XX) → AsNotOwner (403) → Anonymously (401) → Without body (422) → reste** (cas spécifiques).
 - Les tests d'intégration d'un même controller sont regroupés dans un seul fichier.
-- Les méthodes helper privées sont placées **après** les tests.
+- Les méthodes helper privées sont placées **après** tous les tests.
 - La structure des dossiers de tests reflète la structure des domaines métier.

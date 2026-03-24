@@ -19,7 +19,7 @@ class LoginServiceTest extends TestUnitCase
         Hash::shouldReceive('check')->once()->with('Password1', 'hashed-password')->andReturnTrue();
 
         $dto = $this->getLoginDTO();
-        $user = $this->getUserMock(password: 'hashed-password');
+        $user = $this->getUser(password: 'hashed-password');
         $userRepository = $this->getUserRepository();
 
         $userRepository
@@ -56,7 +56,7 @@ class LoginServiceTest extends TestUnitCase
         Hash::shouldReceive('check')->once()->andReturnFalse();
 
         $dto = $this->getLoginDTO();
-        $user = $this->getUserMock(password: 'hashed-password');
+        $user = $this->getUser(password: 'hashed-password');
         $userRepository = $this->getUserRepository();
 
         $userRepository
@@ -95,7 +95,7 @@ class LoginServiceTest extends TestUnitCase
         return $mock;
     }
 
-    private function getUserMock(
+    private function getUser(
         string $id = 'fake-uuid',
         string $email = 'user@example.com',
         string $password = 'hashed-password',

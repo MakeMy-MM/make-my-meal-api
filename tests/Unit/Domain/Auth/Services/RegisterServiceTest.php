@@ -20,7 +20,7 @@ class RegisterServiceTest extends TestUnitCase
         DB::shouldReceive('commit')->once()->andReturnNull();
 
         $dto = $this->getRegisterDTO();
-        $user = $this->getUserMock();
+        $user = $this->getUser();
         $userRepository = $this->getUserRepository();
 
         $userRepository
@@ -74,7 +74,7 @@ class RegisterServiceTest extends TestUnitCase
         return $this->createMock(RegisterDTO::class);
     }
 
-    private function getUserMock(
+    private function getUser(
         string $id = 'fake-uuid',
         string $email = 'user@example.com',
     ): User&MockObject {

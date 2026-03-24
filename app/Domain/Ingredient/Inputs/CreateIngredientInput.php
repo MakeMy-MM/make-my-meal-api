@@ -22,7 +22,7 @@ final class CreateIngredientInput extends CreateIngredientDTO implements InputIn
         return new self(
             name: $validated['name'],
             measurementUnit: MeasurementUnit::from($validated['unit']),
-            userId: $models['user']->id,
+            user: $models['user'],
         );
     }
 }

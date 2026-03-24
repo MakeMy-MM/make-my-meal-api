@@ -3,6 +3,7 @@
 namespace App\Domain\Ingredient\DTOs;
 
 use App\Domain\Ingredient\Enums\MeasurementUnit;
+use App\Domain\User\Models\User;
 use App\DTOs\BaseFieldDTO;
 
 class FieldsIngredientDTO extends BaseFieldDTO
@@ -11,7 +12,7 @@ class FieldsIngredientDTO extends BaseFieldDTO
         public readonly ?string $name = null,
         public readonly ?string $image = null,
         public readonly ?MeasurementUnit $measurementUnit = null,
-        public readonly ?string $userId = null,
+        public readonly ?User $user = null,
     ) {}
 
     /** @return array<string, mixed> */
@@ -20,8 +21,8 @@ class FieldsIngredientDTO extends BaseFieldDTO
         return [
             'name' => $this->name,
             'image' => $this->image,
-            'measurement_unit' => $this->measurementUnit?->value,
-            'user_id' => $this->userId,
+            'measurement_unit' => $this->measurementUnit,
+            'user_id' => $this->user?->id,
         ];
     }
 }

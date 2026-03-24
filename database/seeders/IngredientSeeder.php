@@ -2,26 +2,24 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Ingredient\Enums\MeasurementUnit;
 use App\Domain\Ingredient\Models\Ingredient;
-use App\Domain\User\Models\User;
 use Illuminate\Database\Seeder;
 
 class IngredientSeeder extends Seeder
 {
     public function run(): void
     {
-        $user = User::where('email', 'user@example.com')->firstOrFail();
-
-        $this->create('Tomate', 'kg', $user);
-        $this->create('Oignon', 'unit', $user);
+        $this->create('Tomate', MeasurementUnit::KILOGRAM, UserSeeder::USER_ID);
+        $this->create('Oignon', MeasurementUnit::GRAM, UserSeeder::USER_ID);
     }
 
-    private function create(string $name, string $measurementUnit, User $user): void
+    private function create(string $name, MeasurementUnit $measurementUnit, string $userId): void
     {
         Ingredient::factory()->create([
             'name' => $name,
             'measurement_unit' => $measurementUnit,
-            'user_id' => $user->id,
+            'user_id' => $userId,
         ]);
     }
 }
