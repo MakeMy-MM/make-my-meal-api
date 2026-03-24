@@ -41,7 +41,7 @@ seed:
 	$(APP) php artisan db:seed
 
 fresh:
-	$(APP) php artisan migrate:fresh --seed
+	$(APP) php artisan migrate:fresh
 
 # Artisan
 artisan:

@@ -84,6 +84,11 @@ return (new UserResource($user))
 ;
 ```
 
+### Interpolation de chaînes
+
+- Privilégier l'**interpolation** pour les variables simples (`"{$variable}value"`).
+- Utiliser la **concaténation** quand on accède à des propriétés ou méthodes (`$prefix . self::NAME->value . '.required'`).
+
 ### Casing des tests
 
 - Les méthodes de tests PHPUnit utilisent le **camelCase** (`testCreateReturnsIngredient`).

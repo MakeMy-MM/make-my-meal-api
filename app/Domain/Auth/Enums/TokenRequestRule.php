@@ -8,7 +8,6 @@ enum TokenRequestRule: string implements RuleRequestInterface
 {
     case REFRESH_TOKEN = 'refresh_token';
 
-    /** @return array<int, mixed> */
     public function rules(): array
     {
         return match ($this) {
@@ -18,7 +17,6 @@ enum TokenRequestRule: string implements RuleRequestInterface
         };
     }
 
-    /** @return array<string, string> */
     public function messages(string $prefix = ''): array
     {
         return match ($this) {

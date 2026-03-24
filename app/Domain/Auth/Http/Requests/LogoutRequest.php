@@ -7,7 +7,6 @@ use App\Http\Requests\PublicRequest;
 
 class LogoutRequest extends PublicRequest
 {
-    /** @return array<string, array<int, mixed>> */
     public function rules(): array
     {
         return [
@@ -15,7 +14,6 @@ class LogoutRequest extends PublicRequest
         ];
     }
 
-    /** @return array<string, string> */
     public function messages(): array
     {
         return array_merge(

@@ -2,7 +2,9 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -19,6 +21,18 @@ return new class extends Migration
             $table->boolean('revoked');
             $table->timestamps();
         });
+
+        DB::table('oauth_clients')->insert([
+            'id' => Str::uuid()->toString(),
+            'name' => 'Personal Access Client',
+            'secret' => null,
+            'provider' => 'users',
+            'redirect_uris' => '[]',
+            'grant_types' => '["personal_access"]',
+            'revoked' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     public function down(): void

@@ -15,7 +15,6 @@ class TokenDTO implements DTOInterface
         public readonly CarbonImmutable $refreshTokenExpiresAt,
     ) {}
 
-    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [

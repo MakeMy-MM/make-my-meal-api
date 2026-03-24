@@ -6,6 +6,7 @@ description: Enforce the following PHPDoc conventions, static typing rules, and 
 
 - Les PHPDoc servent principalement au **typage statique** (PHPStan niveau 8) et à l'**autocomplétion IDE**.
 - Ne pas ajouter de PHPDoc si le type natif PHP suffit déjà. Privilégier les PHPDoc pour les **generics**, les **collections typées**, et les **annotations de classe**.
+- **Ne pas re-déclarer les PHPDoc sur les méthodes enfants** quand le parent ou l'interface définit déjà le type de retour. Cela s'applique notamment aux : implémentations de `RuleRequestInterface` (`rules()`, `messages()`), méthodes héritées des Resources (`toArray()`), méthodes héritées des Requests (`rules()`, `messages()`). Ne réécrire un PHPDoc que si le type enfant est **plus précis** que celui du parent (ex: array shape, generic concret).
 
 ## Resources : `@mixin`
 
@@ -65,6 +66,19 @@ public function user(): BelongsTo
 ```php
 /** @use HasFactory<UserFactory> */
 use HasFactory;
+```
+
+## Inputs : `$models` typé en array shape
+
+- Le paramètre `$models` de `fromRequest()` est typé avec un **array shape** PHPDoc pour forcer les clés et types attendus.
+- Chaque Input déclare les models spécifiques dont il a besoin.
+
+```php
+/**
+ * @param CreateIngredientRequest $data
+ * @param array{user: User} $models
+ */
+public static function fromRequest(FormRequest $data, array $models): static
 ```
 
 ## Retours de méthode

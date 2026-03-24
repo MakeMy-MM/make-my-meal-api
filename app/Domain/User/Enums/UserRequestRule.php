@@ -10,7 +10,6 @@ enum UserRequestRule: string implements RuleRequestInterface
     case EMAIL = 'email';
     case PASSWORD = 'password';
 
-    /** @return array<int, mixed> */
     public function rules(): array
     {
         return match ($this) {
@@ -31,7 +30,6 @@ enum UserRequestRule: string implements RuleRequestInterface
         };
     }
 
-    /** @return array<string, string> */
     public function messages(string $prefix = ''): array
     {
         return match ($this) {

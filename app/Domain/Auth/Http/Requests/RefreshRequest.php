@@ -14,7 +14,6 @@ class RefreshRequest extends PublicRequest
         ];
     }
 
-    /** @return array<string, string> */
     public function messages(): array
     {
         return array_merge(

@@ -74,7 +74,8 @@ description: Enforce the following architectural conventions, class responsibili
 - Règles centralisées dans des enums rattachés au domaine du **model** (ex: `UserRequestRule` dans `User/Enums/`).
 - Chaque enum implémente `RuleRequestInterface` qui définit `rules(): array` et `messages(string $prefix = ''): array`.
 - Les Requests composent les règles via `requiredRules()` (create) ou `optionnalRules()` (update).
-- Clés des messages : `{field}.{rule}`. Valeurs : `{domaine}.{field}.{rule}` (i18n).
+- Clés des messages : `{prefix}{field}.{rule}`. Valeurs : `{domaine}.{field}.{rule}` (i18n).
+- Le `$prefix` est appliqué sur les **clés** (validation). Il sert quand les champs d'un domaine sont imbriqués dans le payload d'un autre (ex: une Request qui valide `ingredient.name` appelle `IngredientRequestRule::NAME->messages('ingredient.')`).
 
 ## Resources
 
