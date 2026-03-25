@@ -15,11 +15,11 @@ Guide procédural pour la création de tests. Les templates de composants sont d
 | Composant | Type de test | Obligatoire |
 |-----------|-------------|-------------|
 | Service | Unitaire | Oui — chaque méthode publique |
-| DTO | Unitaire | Oui — `toArray()`, `getProperties()`, `getModel()` |
-| Enum de validation | Unitaire | Oui — `rules()` et `messages()` |
+| Input | Unitaire | Oui — `fromRequest()` → `toArray()`, getters, filtrage nulls |
 | Request (rules) | Unitaire | Oui — vérifier les règles de validation retournées |
 | Controller (route) | Intégration | Oui — minimum 3 cas par route |
 | Repository | Aucun | Non — couvert par les tests d'intégration |
+| DTO | Aucun | Non — couvert par les tests d'Input |
 
 ### Couverture exhaustive des branches
 
@@ -234,11 +234,10 @@ class Create{Entité}ServiceTest extends TestUnitCase
 {
     public function testCreateReturns{Entité}(): void
     {
-        DB::shouldReceive('beginTransaction')->once()->andReturnNull();
-        DB::shouldReceive('commit')->once()->andReturnNull();
+        $this->mockTransaction();
 
         $dto = $this->getCreate{Entité}DTO();
-        $entity = $this->get{Entité}Mock();
+        $entity = $this->get{Entité}();
         $repository = $this->get{Entité}Repository();
 
         $repository
@@ -247,16 +246,15 @@ class Create{Entité}ServiceTest extends TestUnitCase
             ->with($dto)
             ->willReturn($entity);
 
-        $service = $this->getCreate{Entité}Service($repository);
+        $service = $this->get{Entité}Service($repository);
         $result = $service->create($dto);
 
         $this->assertSame($entity, $result);
     }
 
-    public function testCreateThrowsAndRollsBack(): void
+    public function testCreateThrowsOnException(): void
     {
-        DB::shouldReceive('beginTransaction')->once()->andReturnNull();
-        DB::shouldReceive('rollBack')->once()->andReturnNull();
+        $this->mockTransaction();
 
         $dto = $this->getCreate{Entité}DTO();
         $repository = $this->get{Entité}Repository();
@@ -264,12 +262,11 @@ class Create{Entité}ServiceTest extends TestUnitCase
         $repository
             ->expects($this->once())
             ->method('create')
-            ->with($dto)
             ->willThrowException(new \RuntimeException('DB error'));
 
-        $service = $this->getCreate{Entité}Service($repository);
-
         $this->expectException(\RuntimeException::class);
+
+        $service = $this->get{Entité}Service($repository);
         $service->create($dto);
     }
 
@@ -299,7 +296,7 @@ class Create{Entité}ServiceTest extends TestUnitCase
 
     // --- 4. Models ---
 
-    private function get{Entité}Mock(
+    private function get{Entité}(
         string $id = 'fake-uuid',
     ): {Entité}&MockObject {
         return $this->createConfiguredModelMock({Entité}::class, [
@@ -326,65 +323,99 @@ class Create{Entité}ServiceTest extends TestUnitCase
 - Les **Models** sont mockés via `createConfiguredModelMock()` avec tous les attributs en **paramètres avec valeur par défaut**.
 - Les **Repositories** et autres dépendances sont mockés via `createMock()` quand on a besoin de vérifier les appels (`expects`), sinon via `createStub()`.
 
-## Tests unitaires (DTO)
+## Tests unitaires (Input)
 
 ### Règle de couverture
 
-Tester `toArray()` pour vérifier :
-- Le mapping des propriétés vers les clés DB.
-- Le filtrage des valeurs nulles (les champs null ne doivent pas apparaître).
-- Les cas avec tous les champs remplis et avec des champs partiels.
+Tester `fromRequest()` pour vérifier :
+- Le mapping des données validées vers le DTO (via `toArray()`).
+- Le filtrage des valeurs nulles pour les Update (champs partiels).
+- Les getters spécifiques (ex: `getSteps()`, `getIngredients()`, `getModel()`).
+- L'extraction des IDs depuis les models du route binding.
 
-### Template
+### Template (Create)
 
 ```php
-namespace Tests\Unit\Domain\{Domaine}\DTOs;
+namespace Tests\Unit\Domain\{Domaine}\Inputs;
 
-use App\Domain\{Domaine}\DTOs\Create{Entité}DTO;
+use App\Domain\{Domaine}\Http\Requests\Create{Entité}Request;
+use App\Domain\{Domaine}\Inputs\Create{Entité}Input;
+use App\Domain\User\Models\User;
+use PHPUnit\Framework\MockObject\MockObject;
 use Tests\Unit\TestUnitCase;
 
-class Create{Entité}DTOTest extends TestUnitCase
+class Create{Entité}InputTest extends TestUnitCase
 {
-    public function testToArrayReturnsAllFields(): void
+    public function testFromRequestReturnsCorrectToArray(): void
     {
-        $dto = new Create{Entité}DTO(
-            name: 'Test',
-            userId: 'fake-uuid',
+        $input = Create{Entité}Input::fromRequest(
+            $this->getRequest(),
+            ['user' => $this->getUser()],
         );
 
         $this->assertSame([
             'name' => 'Test',
-            'user_id' => 'fake-uuid',
-        ], $dto->toArray());
+            'user_id' => 'user-uuid',
+        ], $input->toArray());
+    }
+
+    private function getRequest(
+        string $name = 'Test',
+    ): Create{Entité}Request {
+        return $this->createFormRequestMock(Create{Entité}Request::class, [
+            'name' => $name,
+        ]);
+    }
+
+    private function getUser(
+        string $id = 'user-uuid',
+    ): User&MockObject {
+        return $this->createConfiguredModelMock(User::class, [
+            'id' => $id,
+        ]);
     }
 }
 ```
 
+### Template (Update)
+
 ```php
-class Update{Entité}DTOTest extends TestUnitCase
+class Update{Entité}InputTest extends TestUnitCase
 {
-    public function testToArrayFiltersNullValues(): void
+    public function testFromRequestWithAllFieldsReturnsCorrectToArray(): void
     {
-        $model = $this->createConfiguredModelMock({Entité}::class);
-        $dto = new Update{Entité}DTO(model: $model);
+        $input = Update{Entité}Input::fromRequest(
+            $this->getRequest(['name' => 'Updated']),
+            ['{entité}' => $this->get{Entité}()],
+        );
 
-        $this->assertSame([], $dto->toArray());
+        $this->assertSame(['name' => 'Updated'], $input->toArray());
     }
 
-    public function testToArrayReturnsOnlySetFields(): void
+    public function testFromRequestWithEmptyFieldsReturnsEmpty(): void
     {
-        $model = $this->createConfiguredModelMock({Entité}::class);
-        $dto = new Update{Entité}DTO(model: $model, name: 'Updated');
+        $input = Update{Entité}Input::fromRequest(
+            $this->getRequest([]),
+            ['{entité}' => $this->get{Entité}()],
+        );
 
-        $this->assertSame(['name' => 'Updated'], $dto->toArray());
+        $this->assertSame([], $input->toArray());
     }
 
-    public function testGetModelReturnsModel(): void
+    public function testFromRequestReturnsCorrectModel(): void
     {
-        $model = $this->createConfiguredModelMock({Entité}::class, ['id' => 'fake-uuid']);
-        $dto = new Update{Entité}DTO(model: $model);
+        $model = $this->get{Entité}();
+        $input = Update{Entité}Input::fromRequest(
+            $this->getRequest([]),
+            ['{entité}' => $model],
+        );
 
-        $this->assertSame($model, $dto->getModel());
+        $this->assertSame($model, $input->getModel());
+    }
+
+    private function getRequest(array $validated = []): Update{Entité}Request
+    {
+        return $this->createFormRequestMock(Update{Entité}Request::class, $validated);
     }
 }
 ```
@@ -441,12 +472,12 @@ class Create{Entité}RequestTest extends TestUnitCase
 
 ## Checklist de tests pour un domaine
 
-1. [ ] `tests/Unit/Domain/{Domaine}/Services/Create{Entité}ServiceTest.php` (et un fichier par service) — chaque branche
-2. [ ] `tests/Unit/Domain/{Domaine}/DTOs/Create{Entité}DTOTest.php` — `toArray()`
-3. [ ] `tests/Unit/Domain/{Domaine}/DTOs/Update{Entité}DTOTest.php` — `toArray()`, filtrage nulls, `getModel()`
+1. [ ] `tests/Unit/Domain/{Domaine}/Services/{Entité}ServiceTest.php` (et un fichier par service) — chaque branche
+2. [ ] `tests/Unit/Domain/{Domaine}/Inputs/Create{Entité}InputTest.php` — `fromRequest()` → `toArray()`
+3. [ ] `tests/Unit/Domain/{Domaine}/Inputs/Update{Entité}InputTest.php` — `fromRequest()` → `toArray()`, filtrage nulls, `getModel()`
 4. [ ] `tests/Unit/Domain/{Domaine}/Http/Requests/Create{Entité}RequestTest.php` — `rules()`, `messages()`
 5. [ ] `tests/Unit/Domain/{Domaine}/Http/Requests/Update{Entité}RequestTest.php` — `rules()`, `messages()`
-6. [ ] `tests/Feature/Domain/{Domaine}/{Entité}ControllerTest.php` — chaque route : 401, 403, 2XX + 422/404 selon contexte
+6. [ ] `tests/Feature/Domain/{Domaine}/{Entité}ControllerTest.php` — chaque route : AsOwner, AsNotOwner, Anonymously + 422/404 selon contexte
 7. [ ] Vérifier la couverture : chaque `if`, `match`, `try/catch` a son test
 
 ## Procédure d'exécution

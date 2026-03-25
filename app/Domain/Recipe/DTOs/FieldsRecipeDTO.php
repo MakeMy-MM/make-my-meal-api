@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Domain\Ingredient\DTOs;
+namespace App\Domain\Recipe\DTOs;
 
-use App\Domain\Ingredient\Enums\MeasurementUnit;
+use App\Domain\Recipe\Enums\RecipeType;
 use App\DTOs\BaseFieldDTO;
 
-class FieldsIngredientDTO extends BaseFieldDTO
+class FieldsRecipeDTO extends BaseFieldDTO
 {
     public function __construct(
         protected readonly ?string $name = null,
+        protected readonly ?RecipeType $type = null,
         protected readonly ?string $image = null,
-        protected readonly ?MeasurementUnit $measurementUnit = null,
         protected readonly ?string $userId = null,
     ) {}
 
@@ -19,8 +19,8 @@ class FieldsIngredientDTO extends BaseFieldDTO
     {
         return [
             'name' => $this->name,
+            'type' => $this->type,
             'image' => $this->image,
-            'measurement_unit' => $this->measurementUnit,
             'user_id' => $this->userId,
         ];
     }

@@ -9,15 +9,15 @@ description: Enforce the following testing strategies, class structures, and nam
 ### Tests Unitaires
 
 - Placés dans `tests/Unit/`.
-- Héritent de `TestUnitCase` qui fournit `createConfiguredModelMock()`.
-- Testent une unité de code isolée (Service, DTO, etc.) sans toucher à la base de données.
+- Héritent de `TestUnitCase` qui fournit `createConfiguredModelMock()`, `mockTransaction()` et `createFormRequestMock()`.
+- Testent une unité de code isolée (Service, Input, etc.) sans toucher à la base de données.
 - Les dépendances (Repositories, autres Services) sont mockées.
 
 #### Quand écrire un test unitaire
 
 - Logique métier dans un Service (calculs, conditions, transformations).
-- Comportement d'un DTO (toArray, filtrage des nulls, getters).
-- Validation des Enums de règles.
+- Mapping d'un Input (`fromRequest()` → `toArray()`, getters, filtrage des nulls).
+- Validation des Requests (règles et messages).
 
 #### Conventions de structure
 
@@ -78,12 +78,14 @@ $this->getLoggedClient()->get('/auth/me');
 
 - Étend `TestCase`.
 - Fournit `createConfiguredModelMock(string $originalClassName, array $attributes = [], array $configuration = [])`.
-- `$attributes` : simule les attributs du model (via `__get()`).
-- `$configuration` : configure les méthodes mockées.
+  - `$attributes` : simule les attributs du model (via `__get()`).
+  - `$configuration` : configure les méthodes mockées.
+- Fournit `mockTransaction()` : mock `DB::transaction()` pour exécuter le callback directement.
+- Fournit `createFormRequestMock(string $requestClass, array $validated)` : crée une vraie instance de la Request spécifique avec les données validées. Nécessaire car `FormRequest` a une méthode `method()` qui empêche PHPUnit de la mocker via `createMock()` / `createConfiguredMock()`.
 
 ## Règles générales
 
-- Chaque fichier de test ne teste qu'un seul sujet (un endpoint, un service, un DTO).
+- Chaque fichier de test ne teste qu'un seul sujet (un endpoint, un service, un input).
 - Nommage des tests unitaires : `testNomFonctionCasCeQueCaDoitFaire`.
   - Succès : `testCreateReturnsIngredient`, `testGetByUserReturnsCollection`.
   - Exception : `testCreateThrowsInternalServerErrorHttpException`.

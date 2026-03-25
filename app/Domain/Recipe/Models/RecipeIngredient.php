@@ -5,13 +5,16 @@ namespace App\Domain\Recipe\Models;
 use App\Domain\Ingredient\Models\Ingredient;
 use App\Domain\User\Models\User;
 use App\Models\OwnerInterface;
+use Database\Factories\RecipeIngredientFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RecipeIngredient extends Model implements OwnerInterface
 {
-    use HasUuids;
+    /** @use HasFactory<RecipeIngredientFactory> */
+    use HasFactory, HasUuids;
 
     protected $fillable = ['position', 'quantity', 'ingredient_id', 'recipe_id'];
 
@@ -20,6 +23,11 @@ class RecipeIngredient extends Model implements OwnerInterface
     protected $casts = [
         'quantity' => 'decimal:2',
     ];
+
+    protected static function newFactory(): RecipeIngredientFactory
+    {
+        return RecipeIngredientFactory::new();
+    }
 
     /** @return BelongsTo<Ingredient, $this> */
     public function ingredient(): BelongsTo

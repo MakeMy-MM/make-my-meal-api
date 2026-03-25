@@ -11,6 +11,8 @@ abstract class BasicResource extends JsonResource
     /** @var string */
     public static $wrap = 'data';
 
+    public static string $wrapCollection = 'data';
+
     /**
      * Transform the resource into an array.
      *

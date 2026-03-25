@@ -23,15 +23,15 @@ class User extends Authenticatable implements OAuthenticatable, OwnerInterface
 
     protected $hidden = ['password'];
 
-    protected static function newFactory(): UserFactory
-    {
-        return UserFactory::new();
-    }
-
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    protected static function newFactory(): UserFactory
+    {
+        return UserFactory::new();
+    }
 
     /** @return HasMany<Ingredient, $this> */
     public function ingredients(): HasMany

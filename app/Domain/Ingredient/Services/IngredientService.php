@@ -35,6 +35,6 @@ class IngredientService implements IngredientServiceInterface
     /** @return Collection<int, Ingredient> */
     public function getByUser(User $user): Collection
     {
-        return $this->repository->findByFields(new FieldsIngredientDTO(user: $user));
+        return $this->repository->findByFields(new FieldsIngredientDTO(userId: $user->id));
     }
 }

@@ -13,6 +13,7 @@ description: Enforce the following architectural conventions, class responsibili
 - Les relations doivent être typées avec les génériques PHPDoc : `@return RelationType<ModelCible, $this>`.
 - Les models sont placés dans `app/Domain/{Domaine}/Models/`.
 - Quand un model n'est pas dans `App\Models\`, overrider `newFactory()` pour la résolution des factories.
+- Ordre des membres dans un model : **traits → propriétés → `newFactory()` → relations → autres méthodes**.
 - Les models possédés par un utilisateur implémentent `OwnerInterface` (élément global dans `app/Models/`) avec la méthode `getOwner(): User`.
 
 ## Inputs
@@ -32,9 +33,13 @@ description: Enforce the following architectural conventions, class responsibili
   - `UpdateDTOInterface` : contrat avec `getModel(): Model`.
 - Le `Fields{Entité}DTO` est rattaché au domaine du model. Les DTOs d'action d'autres domaines étendent ce DTO de model.
 - Par domaine de model :
-  - `Fields{Entité}DTO` : étend `BaseFieldDTO`, tous les champs en nullable, implémente `getProperties()`.
+  - `Fields{Entité}DTO` : étend `BaseFieldDTO`, tous les champs en nullable avec `protected readonly`, implémente `getProperties()`.
   - `Create{Entité}DTO` : étend `Fields{Entité}DTO`, champs requis.
   - `Update{Entité}DTO` : étend `Fields{Entité}DTO`, implémente `UpdateDTOInterface`, model + champs optionnels.
+- Les DTOs (Fields et Create) ne contiennent **jamais de models** — uniquement des scalaires (string, int, float, enum). Les clés étrangères sont des **id strings** (ex: `?string $userId`).
+- Les Inputs extraient les IDs depuis les models du route binding (ex: `$models['user']->id`).
+- L'Input ne fait **jamais de requêtes DB**.
+- Pour les **entités enfants** (ex: RecipeStep, RecipeIngredient), les Create DTOs fournissent une méthode statique `fromFields(FieldsDTO $fields, string $parentId): self` qui asserte les champs non-null du Fields DTO et construit le Create DTO complet avec l'ID du parent.
 
 ## Services
 
@@ -76,6 +81,11 @@ description: Enforce the following architectural conventions, class responsibili
 - Les Requests composent les règles via `requiredRules()` (create) ou `optionnalRules()` (update).
 - Clés des messages : `{prefix}{field}.{rule}`. Valeurs : `{domaine}.{field}.{rule}` (i18n).
 - Le `$prefix` est appliqué sur les **clés** (validation). Il sert quand les champs d'un domaine sont imbriqués dans le payload d'un autre (ex: une Request qui valide `ingredient.name` appelle `IngredientRequestRule::NAME->messages('ingredient.')`).
+- Pour les **Aggregate Roots avec enfants** (ex: Recipe), l'enum de l'Aggregate Root centralise tous les cas (y compris les nested) :
+  - Des `const string` définissent les préfixes (ex: `STEP = 'steps.*.'`, `INGREDIENT = 'ingredients.*.'`).
+  - Des cases nested combinent le préfixe + le champ enfant (ex: `STEP_DESCRIPTION = self::STEP . 'description'`).
+  - Les `rules()` et `messages()` des cases nested **délèguent** aux enums enfants (ex: `RecipeStepRequestRule::DESCRIPTION->rules()`).
+  - La Request n'utilise que l'enum de l'Aggregate Root, sans composer manuellement les préfixes.
 
 ## Resources
 

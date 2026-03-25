@@ -10,6 +10,8 @@ class TokenResource extends BasicResource
 {
     public static $wrap = 'tokens';
 
+    public static string $wrapCollection = 'tokens';
+
     public function toArray(Request $request): array
     {
         return [

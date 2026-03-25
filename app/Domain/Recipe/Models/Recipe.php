@@ -5,20 +5,28 @@ namespace App\Domain\Recipe\Models;
 use App\Domain\Recipe\Enums\RecipeType;
 use App\Domain\User\Models\User;
 use App\Models\OwnerInterface;
+use Database\Factories\RecipeFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Recipe extends Model implements OwnerInterface
 {
-    use HasUuids;
+    /** @use HasFactory<RecipeFactory> */
+    use HasFactory, HasUuids;
 
     protected $fillable = ['type', 'name', 'image', 'user_id'];
 
     protected $casts = [
         'type' => RecipeType::class,
     ];
+
+    protected static function newFactory(): RecipeFactory
+    {
+        return RecipeFactory::new();
+    }
 
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo

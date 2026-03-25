@@ -10,6 +10,8 @@ class IngredientResource extends BasicResource
 {
     public static $wrap = 'ingredient';
 
+    public static string $wrapCollection = 'ingredients';
+
     public function toArray(Request $request): array
     {
         return [
