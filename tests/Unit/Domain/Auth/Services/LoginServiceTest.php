@@ -7,9 +7,9 @@ use App\Domain\Auth\Services\LoginService;
 use App\Domain\Auth\Services\LoginServiceInterface;
 use App\Domain\User\Models\User;
 use App\Domain\User\Repositories\UserRepository;
-use App\Http\Exceptions\UnauthorizedHttpException;
 use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\MockObject\MockObject;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\Unit\TestUnitCase;
 
 class LoginServiceTest extends TestUnitCase
@@ -45,7 +45,7 @@ class LoginServiceTest extends TestUnitCase
             ->willReturn(null)
         ;
 
-        $this->expectException(UnauthorizedHttpException::class);
+        $this->expectException(HttpException::class);
 
         $service = $this->getLoginService($userRepository);
         $service->login($dto);
@@ -65,7 +65,7 @@ class LoginServiceTest extends TestUnitCase
             ->willReturn($user)
         ;
 
-        $this->expectException(UnauthorizedHttpException::class);
+        $this->expectException(HttpException::class);
 
         $service = $this->getLoginService($userRepository);
         $service->login($dto);

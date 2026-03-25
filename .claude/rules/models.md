@@ -44,15 +44,15 @@ description: Enforce the following architectural conventions, class responsibili
 - Le binding se fait via la propriété `$bindings` dans le ServiceProvider du domaine.
 - Le controller injecte l'interface, pas l'implémentation.
 - Les services retournent des **Models ou Collections**, jamais des Resources.
-- Les opérations d'écriture (create, update, delete) sont encapsulées dans des transactions explicites (`beginTransaction / commit / rollBack`).
+- Les opérations d'écriture (create, update, delete) sont encapsulées via `DB::transaction(fn () => ...)`.
 
 ## Repositories
 
 - Chaque domaine a son propre Repository dans `{Domaine}/Repositories/`.
 - Les Repositories étendent `ModelRepository` (élément global dans `app/Repositories/`).
 - `ModelRepository` fournit `findByFields()` et `findFirstByFields()`.
-- Les Repositories spécialisés ajoutent `create()`, `update()`, `delete()`.
-- Les erreurs dans les Repositories sont wrappées dans `InternalServerErrorHttpException`.
+- Les Repositories spécialisés ajoutent `create()`, `update()`, `delete()` sans try/catch.
+- Les exceptions DB remontent naturellement et sont gérées par `bootstrap/app.php` (`UniqueConstraintViolationException` → 409, `ModelNotFoundException` → 404, reste → 500).
 - Chaque Repository enfant re-déclare les méthodes héritées via `@method` avec le type concret.
 
 ## Providers

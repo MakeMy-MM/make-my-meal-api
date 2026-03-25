@@ -5,7 +5,6 @@ namespace App\Domain\Auth\Repositories;
 use App\Domain\Auth\Models\RefreshToken;
 use App\Domain\User\Models\User;
 use App\DTOs\BaseFieldDTO;
-use App\Http\Exceptions\InternalServerErrorHttpException;
 use App\Repositories\ModelRepository;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -27,15 +26,11 @@ class RefreshTokenRepository extends ModelRepository
 
     public function create(string $userId, string $hashedToken): RefreshToken
     {
-        try {
-            return RefreshToken::create([
-                'user_id' => $userId,
-                'token' => $hashedToken,
-                'expires_at' => now()->addMinutes($this->expiration),
-            ]);
-        } catch (\Throwable $e) {
-            throw new InternalServerErrorHttpException(previous: $e);
-        }
+        return RefreshToken::create([
+            'user_id' => $userId,
+            'token' => $hashedToken,
+            'expires_at' => now()->addMinutes($this->expiration),
+        ]);
     }
 
     public function findByToken(string $hashedToken): ?RefreshToken
@@ -45,19 +40,11 @@ class RefreshTokenRepository extends ModelRepository
 
     public function delete(RefreshToken $refreshToken): void
     {
-        try {
-            $refreshToken->delete();
-        } catch (\Throwable $e) {
-            throw new InternalServerErrorHttpException(previous: $e);
-        }
+        $refreshToken->delete();
     }
 
     public function deleteAllForUser(User $user): void
     {
-        try {
-            RefreshToken::where('user_id', $user->id)->delete();
-        } catch (\Throwable $e) {
-            throw new InternalServerErrorHttpException(previous: $e);
-        }
+        RefreshToken::where('user_id', $user->id)->delete();
     }
 }

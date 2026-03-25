@@ -6,11 +6,14 @@ use App\Domain\Auth\DTOs\LoginDTO;
 use App\Domain\User\DTOs\FieldsUserDTO;
 use App\Domain\User\Models\User;
 use App\Domain\User\Repositories\UserRepository;
-use App\Http\Exceptions\UnauthorizedHttpException;
 use Illuminate\Support\Facades\Hash;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class LoginService implements LoginServiceInterface
 {
+    public const string INVALID_CREDENTIALS = 'Invalid credentials';
+
     public function __construct(
         private readonly UserRepository $userRepository,
     ) {}
@@ -22,7 +25,7 @@ class LoginService implements LoginServiceInterface
         );
 
         if (!$user || !Hash::check($dto->getPassword(), $user->password)) {
-            throw new UnauthorizedHttpException();
+            throw new HttpException(Response::HTTP_UNAUTHORIZED, self::INVALID_CREDENTIALS);
         }
 
         return $user;

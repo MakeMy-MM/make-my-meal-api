@@ -3,11 +3,17 @@
 namespace Tests\Unit;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 
 abstract class TestUnitCase extends TestCase
 {
+    protected function mockTransaction(): void
+    {
+        DB::shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+    }
+
     /**
      * @template T of Model
      *

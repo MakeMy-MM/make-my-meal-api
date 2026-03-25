@@ -4,7 +4,6 @@ namespace App\Domain\User\Repositories;
 
 use App\Domain\User\Models\User;
 use App\DTOs\BaseFieldDTO;
-use App\Http\Exceptions\InternalServerErrorHttpException;
 use App\Repositories\ModelRepository;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -23,10 +22,6 @@ class UserRepository extends ModelRepository
 
     public function create(BaseFieldDTO $dto): User
     {
-        try {
-            return User::create($dto->toArray());
-        } catch (\Throwable $e) {
-            throw new InternalServerErrorHttpException(previous: $e);
-        }
+        return User::create($dto->toArray());
     }
 }

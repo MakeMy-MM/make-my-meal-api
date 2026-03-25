@@ -7,6 +7,7 @@ use App\Domain\Auth\Models\RefreshToken;
 use App\Domain\Auth\Repositories\RefreshTokenRepository;
 use App\Domain\User\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class TokenService implements TokenServiceInterface
@@ -25,15 +26,17 @@ class TokenService implements TokenServiceInterface
 
     public function create(User $user): TokenDTO
     {
-        $now = CarbonImmutable::now();
+        return DB::transaction(function () use ($user) {
+            $now = CarbonImmutable::now();
 
-        return new TokenDTO(
-            accessToken: $this->createAccessToken($user),
-            accessTokenType: 'Bearer',
-            accessTokenExpiresAt: $now->addMinutes($this->accessExpiration),
-            refreshToken: $this->createRefreshToken($user),
-            refreshTokenExpiresAt: $now->addMinutes($this->refreshExpiration),
-        );
+            return new TokenDTO(
+                accessToken: $this->createAccessToken($user),
+                accessTokenType: 'Bearer',
+                accessTokenExpiresAt: $now->addMinutes($this->accessExpiration),
+                refreshToken: $this->createRefreshToken($user),
+                refreshTokenExpiresAt: $now->addMinutes($this->refreshExpiration),
+            );
+        });
     }
 
     public function findValidRefreshToken(string $plainToken): ?RefreshToken
@@ -49,12 +52,12 @@ class TokenService implements TokenServiceInterface
 
     public function deleteRefreshToken(RefreshToken $refreshToken): void
     {
-        $this->refreshTokenRepository->delete($refreshToken);
+        DB::transaction(fn() => $this->refreshTokenRepository->delete($refreshToken));
     }
 
     public function deleteAllRefreshTokensForUser(User $user): void
     {
-        $this->refreshTokenRepository->deleteAllForUser($user);
+        DB::transaction(fn() => $this->refreshTokenRepository->deleteAllForUser($user));
     }
 
     private function createAccessToken(User $user): string

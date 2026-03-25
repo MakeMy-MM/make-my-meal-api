@@ -15,17 +15,9 @@ class LogoutService implements LogoutServiceInterface
     /** @param AccessToken<mixed> $accessToken */
     public function logout(AccessToken $accessToken, RefreshToken $refreshToken): void
     {
-        DB::beginTransaction();
-
-        try {
+        DB::transaction(function () use ($accessToken, $refreshToken) {
             $accessToken->revoke();
             $this->tokenService->deleteRefreshToken($refreshToken);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-
-            throw $e;
-        }
-
-        DB::commit();
+        });
     }
 }

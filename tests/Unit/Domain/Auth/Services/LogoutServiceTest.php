@@ -6,7 +6,6 @@ use App\Domain\Auth\Models\RefreshToken;
 use App\Domain\Auth\Services\LogoutService;
 use App\Domain\Auth\Services\LogoutServiceInterface;
 use App\Domain\Auth\Services\TokenServiceInterface;
-use Illuminate\Support\Facades\DB;
 use Laravel\Passport\AccessToken;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\Unit\TestUnitCase;
@@ -15,8 +14,7 @@ class LogoutServiceTest extends TestUnitCase
 {
     public function testLogoutRevokesAccessTokenAndDeletesRefreshToken(): void
     {
-        DB::shouldReceive('beginTransaction')->once()->andReturnNull();
-        DB::shouldReceive('commit')->once()->andReturnNull();
+        $this->mockTransaction();
 
         $refreshTokenModel = $this->getRefreshToken();
         $accessToken = $this->getAccessToken();
@@ -38,10 +36,9 @@ class LogoutServiceTest extends TestUnitCase
         $service->logout($accessToken, $refreshTokenModel);
     }
 
-    public function testLogoutRollsBackOnException(): void
+    public function testLogoutThrowsOnException(): void
     {
-        DB::shouldReceive('beginTransaction')->once()->andReturnNull();
-        DB::shouldReceive('rollBack')->once()->andReturnNull();
+        $this->mockTransaction();
 
         $refreshTokenModel = $this->getRefreshToken();
         $accessToken = $this->getAccessToken();
@@ -86,4 +83,5 @@ class LogoutServiceTest extends TestUnitCase
     {
         return $this->createMock(AccessToken::class);
     }
+
 }

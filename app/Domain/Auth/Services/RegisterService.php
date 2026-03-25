@@ -15,18 +15,6 @@ class RegisterService implements RegisterServiceInterface
 
     public function register(RegisterDTO $dto): User
     {
-        DB::beginTransaction();
-
-        try {
-            $user = $this->userRepository->create($dto);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-
-            throw $e;
-        }
-
-        DB::commit();
-
-        return $user;
+        return DB::transaction(fn() => $this->userRepository->create($dto));
     }
 }

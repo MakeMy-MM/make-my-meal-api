@@ -7,8 +7,6 @@ use App\Domain\Auth\Services\RegisterService;
 use App\Domain\Auth\Services\RegisterServiceInterface;
 use App\Domain\User\Models\User;
 use App\Domain\User\Repositories\UserRepository;
-use App\Http\Exceptions\InternalServerErrorHttpException;
-use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\Unit\TestUnitCase;
 
@@ -16,8 +14,7 @@ class RegisterServiceTest extends TestUnitCase
 {
     public function testRegisterReturnsUser(): void
     {
-        DB::shouldReceive('beginTransaction')->once()->andReturnNull();
-        DB::shouldReceive('commit')->once()->andReturnNull();
+        $this->mockTransaction();
 
         $dto = $this->getRegisterDTO();
         $user = $this->getUser();
@@ -36,10 +33,9 @@ class RegisterServiceTest extends TestUnitCase
         $this->assertSame($user, $result);
     }
 
-    public function testRegisterThrowsInternalServerErrorHttpException(): void
+    public function testRegisterThrowsOnException(): void
     {
-        DB::shouldReceive('beginTransaction')->once()->andReturnNull();
-        DB::shouldReceive('rollBack')->once()->andReturnNull();
+        $this->mockTransaction();
 
         $dto = $this->getRegisterDTO();
         $userRepository = $this->getUserRepository();
@@ -47,10 +43,10 @@ class RegisterServiceTest extends TestUnitCase
         $userRepository
             ->expects($this->once())
             ->method('create')
-            ->willThrowException(new InternalServerErrorHttpException())
+            ->willThrowException(new \RuntimeException('DB error'))
         ;
 
-        $this->expectException(InternalServerErrorHttpException::class);
+        $this->expectException(\RuntimeException::class);
 
         $service = $this->getRegisterService($userRepository);
         $service->register($dto);

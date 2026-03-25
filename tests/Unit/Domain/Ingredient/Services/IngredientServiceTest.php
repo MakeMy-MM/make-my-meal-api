@@ -9,9 +9,7 @@ use App\Domain\Ingredient\Repositories\IngredientRepository;
 use App\Domain\Ingredient\Services\IngredientService;
 use App\Domain\Ingredient\Services\IngredientServiceInterface;
 use App\Domain\User\Models\User;
-use App\Http\Exceptions\InternalServerErrorHttpException;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\Unit\TestUnitCase;
 
@@ -19,8 +17,7 @@ class IngredientServiceTest extends TestUnitCase
 {
     public function testCreateReturnsIngredient(): void
     {
-        DB::shouldReceive('beginTransaction')->once()->andReturnNull();
-        DB::shouldReceive('commit')->once()->andReturnNull();
+        $this->mockTransaction();
 
         $dto = $this->getCreateIngredientDTO();
         $ingredient = $this->getIngredient();
@@ -39,10 +36,9 @@ class IngredientServiceTest extends TestUnitCase
         $this->assertSame($ingredient, $result);
     }
 
-    public function testCreateThrowsInternalServerErrorHttpException(): void
+    public function testCreateThrowsOnException(): void
     {
-        DB::shouldReceive('beginTransaction')->once()->andReturnNull();
-        DB::shouldReceive('rollBack')->once()->andReturnNull();
+        $this->mockTransaction();
 
         $dto = $this->getCreateIngredientDTO();
         $repository = $this->getIngredientRepository();
@@ -50,10 +46,10 @@ class IngredientServiceTest extends TestUnitCase
         $repository
             ->expects($this->once())
             ->method('create')
-            ->willThrowException(new InternalServerErrorHttpException())
+            ->willThrowException(new \RuntimeException('DB error'))
         ;
 
-        $this->expectException(InternalServerErrorHttpException::class);
+        $this->expectException(\RuntimeException::class);
 
         $service = $this->getIngredientService($repository);
         $service->create($dto);
@@ -61,8 +57,7 @@ class IngredientServiceTest extends TestUnitCase
 
     public function testUpdateReturnsIngredient(): void
     {
-        DB::shouldReceive('beginTransaction')->once()->andReturnNull();
-        DB::shouldReceive('commit')->once()->andReturnNull();
+        $this->mockTransaction();
 
         $dto = $this->getUpdateIngredientDTO();
         $ingredient = $this->getIngredient();
@@ -81,10 +76,9 @@ class IngredientServiceTest extends TestUnitCase
         $this->assertSame($ingredient, $result);
     }
 
-    public function testUpdateThrowsInternalServerErrorHttpException(): void
+    public function testUpdateThrowsOnException(): void
     {
-        DB::shouldReceive('beginTransaction')->once()->andReturnNull();
-        DB::shouldReceive('rollBack')->once()->andReturnNull();
+        $this->mockTransaction();
 
         $dto = $this->getUpdateIngredientDTO();
         $repository = $this->getIngredientRepository();
@@ -92,10 +86,10 @@ class IngredientServiceTest extends TestUnitCase
         $repository
             ->expects($this->once())
             ->method('update')
-            ->willThrowException(new InternalServerErrorHttpException())
+            ->willThrowException(new \RuntimeException('DB error'))
         ;
 
-        $this->expectException(InternalServerErrorHttpException::class);
+        $this->expectException(\RuntimeException::class);
 
         $service = $this->getIngredientService($repository);
         $service->update($dto);
@@ -162,4 +156,5 @@ class IngredientServiceTest extends TestUnitCase
             'measurement_unit' => $measurementUnit,
         ]);
     }
+
 }

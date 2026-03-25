@@ -19,36 +19,12 @@ class IngredientService implements IngredientServiceInterface
 
     public function create(CreateIngredientDTO $dto): Ingredient
     {
-        DB::beginTransaction();
-
-        try {
-            $result = $this->repository->create($dto);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-
-            throw $e;
-        }
-
-        DB::commit();
-
-        return $result;
+        return DB::transaction(fn() => $this->repository->create($dto));
     }
 
     public function update(UpdateIngredientDTO $dto): Ingredient
     {
-        DB::beginTransaction();
-
-        try {
-            $result = $this->repository->update($dto);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-
-            throw $e;
-        }
-
-        DB::commit();
-
-        return $result;
+        return DB::transaction(fn() => $this->repository->update($dto));
     }
 
     /** @return Collection<int, Ingredient> */

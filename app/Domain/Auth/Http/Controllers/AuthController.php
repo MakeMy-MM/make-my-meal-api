@@ -15,10 +15,10 @@ use App\Domain\Auth\Services\RegisterServiceInterface;
 use App\Domain\Auth\Services\TokenServiceInterface;
 use App\Domain\User\Http\Resources\UserResource;
 use App\Domain\User\Models\User;
-use App\Http\Exceptions\UnauthorizedHttpException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response as HttpResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class AuthController
 {
@@ -67,7 +67,7 @@ class AuthController
         $accessToken = $user->token();
 
         if (!$accessToken instanceof \Laravel\Passport\AccessToken) {
-            throw new UnauthorizedHttpException();
+            throw new HttpException(Response::HTTP_UNAUTHORIZED);
         }
 
         /** @var string $plainToken */
@@ -76,7 +76,7 @@ class AuthController
         $refreshToken = $this->tokenService->findValidRefreshToken($plainToken);
 
         if ($refreshToken === null || $refreshToken->user_id !== $user->id) {
-            throw new UnauthorizedHttpException();
+            throw new HttpException(Response::HTTP_UNAUTHORIZED);
         }
 
         $this->logoutService->logout($accessToken, $refreshToken);
@@ -92,7 +92,7 @@ class AuthController
         $refreshToken = $this->tokenService->findValidRefreshToken($plainToken);
 
         if ($refreshToken === null) {
-            throw new UnauthorizedHttpException();
+            throw new HttpException(Response::HTTP_UNAUTHORIZED);
         }
 
         /** @var User $user */

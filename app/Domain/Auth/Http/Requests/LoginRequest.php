@@ -2,10 +2,12 @@
 
 namespace App\Domain\Auth\Http\Requests;
 
+use App\Domain\Auth\Services\LoginService;
 use App\Domain\User\Enums\UserRequestRule;
-use App\Http\Exceptions\UnauthorizedHttpException;
 use App\Http\Requests\PublicRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class LoginRequest extends PublicRequest
 {
@@ -19,7 +21,7 @@ class LoginRequest extends PublicRequest
 
     protected function failedValidation(Validator $validator): void
     {
-        throw new UnauthorizedHttpException();
+        throw new HttpException(Response::HTTP_UNAUTHORIZED, LoginService::INVALID_CREDENTIALS);
     }
 
     public function messages(): array

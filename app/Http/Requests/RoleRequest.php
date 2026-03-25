@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use App\Domain\User\Models\User;
-use App\Http\Exceptions\InternalServerErrorHttpException;
 use App\Models\OwnerInterface;
 use Webmozart\Assert\Assert;
 
@@ -24,7 +23,7 @@ abstract class RoleRequest extends BaseRequest
 
         foreach ($parameters as $parameter) {
             if (!$parameter instanceof OwnerInterface) {
-                throw new InternalServerErrorHttpException();
+                throw new \LogicException(\get_class($parameter) . ' does not implement OwnerInterface');
             }
 
             $owner = $parameter->getOwner();
