@@ -14,6 +14,8 @@ interface IngredientServiceInterface
 
     public function update(UpdateIngredientDTO $dto): Ingredient;
 
+    public function delete(Ingredient $ingredient): void;
+
     /** @return Collection<int, Ingredient> */
     public function getByUser(User $user): Collection;
 }

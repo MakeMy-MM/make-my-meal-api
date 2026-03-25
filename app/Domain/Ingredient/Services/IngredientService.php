@@ -27,6 +27,11 @@ class IngredientService implements IngredientServiceInterface
         return DB::transaction(fn() => $this->repository->update($dto));
     }
 
+    public function delete(Ingredient $ingredient): void
+    {
+        DB::transaction(fn() => $this->repository->delete($ingredient));
+    }
+
     /** @return Collection<int, Ingredient> */
     public function getByUser(User $user): Collection
     {

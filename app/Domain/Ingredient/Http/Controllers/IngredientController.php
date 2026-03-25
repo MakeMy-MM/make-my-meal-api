@@ -3,6 +3,7 @@
 namespace App\Domain\Ingredient\Http\Controllers;
 
 use App\Domain\Ingredient\Http\Requests\CreateIngredientRequest;
+use App\Domain\Ingredient\Http\Requests\DeleteIngredientRequest;
 use App\Domain\Ingredient\Http\Requests\IndexIngredientRequest;
 use App\Domain\Ingredient\Http\Requests\UpdateIngredientRequest;
 use App\Domain\Ingredient\Http\Resources\IngredientResource;
@@ -13,6 +14,7 @@ use App\Domain\Ingredient\Models\Ingredient;
 use App\Domain\Ingredient\Services\IngredientServiceInterface;
 use App\Domain\User\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response as HttpResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class IngredientController
@@ -51,5 +53,12 @@ class IngredientController
             ->response()
             ->setStatusCode(Response::HTTP_OK)
         ;
+    }
+
+    public function destroy(DeleteIngredientRequest $request, User $user, Ingredient $ingredient): HttpResponse
+    {
+        $this->ingredientService->delete($ingredient);
+
+        return response()->noContent();
     }
 }

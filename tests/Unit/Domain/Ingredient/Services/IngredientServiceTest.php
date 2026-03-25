@@ -95,6 +95,42 @@ class IngredientServiceTest extends TestUnitCase
         $service->update($dto);
     }
 
+    public function testDeleteCallsRepository(): void
+    {
+        $this->mockTransaction();
+
+        $ingredient = $this->getIngredient();
+        $repository = $this->getIngredientRepository();
+
+        $repository
+            ->expects($this->once())
+            ->method('delete')
+            ->with($ingredient)
+        ;
+
+        $service = $this->getIngredientService($repository);
+        $service->delete($ingredient);
+    }
+
+    public function testDeleteThrowsOnException(): void
+    {
+        $this->mockTransaction();
+
+        $ingredient = $this->getIngredient();
+        $repository = $this->getIngredientRepository();
+
+        $repository
+            ->expects($this->once())
+            ->method('delete')
+            ->willThrowException(new \RuntimeException('DB error'))
+        ;
+
+        $this->expectException(\RuntimeException::class);
+
+        $service = $this->getIngredientService($repository);
+        $service->delete($ingredient);
+    }
+
     public function testGetByUserReturnsCollection(): void
     {
         $user = $this->getUser();

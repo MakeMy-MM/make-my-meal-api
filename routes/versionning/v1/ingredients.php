@@ -9,5 +9,6 @@ Route::prefix('users/{user}/ingredients')->middleware('auth:api')->group(functio
 
     Route::prefix('{ingredient}')->group(function () {
         Route::patch('/', [IngredientController::class, 'update']);
+        Route::delete('/', [IngredientController::class, 'destroy']);
     });
 });

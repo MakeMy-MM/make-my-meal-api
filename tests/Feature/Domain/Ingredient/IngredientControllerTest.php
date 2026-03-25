@@ -142,6 +142,46 @@ class IngredientControllerTest extends TestFeatureCase
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 
+    public function testDeleteDestroyAsOwnerReturnsNoContent(): void
+    {
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->delete('/users/' . UserSeeder::USER_ID . '/ingredients/' . IngredientSeeder::TOMATE_ID)
+        ;
+
+        $response->assertStatus(Response::HTTP_NO_CONTENT);
+
+        $this->assertSoftDeleted('ingredients', [
+            'id' => IngredientSeeder::TOMATE_ID,
+        ]);
+    }
+
+    public function testDeleteDestroyAsNotOwnerReturnsForbidden(): void
+    {
+        $response = $this->getLoggedClient()
+            ->delete('/users/' . UserSeeder::USER_ID . '/ingredients/' . IngredientSeeder::TOMATE_ID)
+        ;
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN);
+    }
+
+    public function testDeleteDestroyAnonymouslyReturnsUnauthorized(): void
+    {
+        $response = $this->getClient()
+            ->delete('/users/' . UserSeeder::USER_ID . '/ingredients/' . IngredientSeeder::TOMATE_ID)
+        ;
+
+        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testDeleteDestroyWithInvalidIdReturnsNotFound(): void
+    {
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->delete('/users/' . UserSeeder::USER_ID . '/ingredients/00000000-0000-0000-0000-000000000000')
+        ;
+
+        $response->assertStatus(Response::HTTP_NOT_FOUND);
+    }
+
     /** @return array<int, string> */
     private function ingredientStructure(): array
     {

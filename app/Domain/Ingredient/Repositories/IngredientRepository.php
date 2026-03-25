@@ -35,4 +35,9 @@ class IngredientRepository extends ModelRepository
 
         return $ingredient;
     }
+
+    public function delete(Ingredient $ingredient): void
+    {
+        $ingredient->delete();
+    }
 }
