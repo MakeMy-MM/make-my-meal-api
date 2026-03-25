@@ -136,7 +136,7 @@ class IngredientControllerTest extends TestFeatureCase
     public function testPatchUpdateWithInvalidIdReturnsNotFound(): void
     {
         $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
-            ->patch('/users/' . UserSeeder::USER_ID . '/ingredients/00000000-0000-0000-0000-000000000000', $this->validUpdateBody())
+            ->patch('/users/' . UserSeeder::USER_ID . '/ingredients/' . self::NONEXISTENT_UUID, $this->validUpdateBody())
         ;
 
         $response->assertStatus(Response::HTTP_NOT_FOUND);
@@ -176,7 +176,7 @@ class IngredientControllerTest extends TestFeatureCase
     public function testDeleteDestroyWithInvalidIdReturnsNotFound(): void
     {
         $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
-            ->delete('/users/' . UserSeeder::USER_ID . '/ingredients/00000000-0000-0000-0000-000000000000')
+            ->delete('/users/' . UserSeeder::USER_ID . '/ingredients/' . self::NONEXISTENT_UUID)
         ;
 
         $response->assertStatus(Response::HTTP_NOT_FOUND);

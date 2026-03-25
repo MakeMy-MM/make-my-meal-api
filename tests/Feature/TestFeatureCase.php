@@ -11,6 +11,8 @@ abstract class TestFeatureCase extends TestCase
 {
     use RefreshDatabase;
 
+    protected const string NONEXISTENT_UUID = '00000000-0000-0000-0000-000000000000';
+
     protected bool $seed = true;
 
     private string $prefix = '/api/v1';
