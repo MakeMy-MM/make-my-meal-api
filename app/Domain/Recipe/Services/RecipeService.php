@@ -5,8 +5,11 @@ namespace App\Domain\Recipe\Services;
 use App\Domain\Recipe\DTOs\CreateRecipeDTO;
 use App\Domain\Recipe\DTOs\CreateRecipeIngredientDTO;
 use App\Domain\Recipe\DTOs\CreateRecipeStepDTO;
+use App\Domain\Recipe\DTOs\FieldsRecipeDTO;
 use App\Domain\Recipe\Models\Recipe;
 use App\Domain\Recipe\Repositories\RecipeRepository;
+use App\Domain\User\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 class RecipeService implements RecipeServiceInterface
@@ -30,5 +33,14 @@ class RecipeService implements RecipeServiceInterface
 
             return $recipe->load(['steps', 'recipeIngredients.ingredient']);
         });
+    }
+
+    /** @return Collection<int, Recipe> */
+    public function getByUser(User $user): Collection
+    {
+        return $this->repository->findByFields(
+            new FieldsRecipeDTO(userId: $user->id),
+            with: ['steps', 'recipeIngredients.ingredient'],
+        );
     }
 }

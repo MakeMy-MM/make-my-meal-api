@@ -3,12 +3,15 @@
 namespace Tests\Unit\Domain\Recipe\Services;
 
 use App\Domain\Recipe\DTOs\CreateRecipeDTO;
+use App\Domain\Recipe\DTOs\FieldsRecipeDTO;
 use App\Domain\Recipe\DTOs\FieldsRecipeIngredientDTO;
 use App\Domain\Recipe\DTOs\FieldsRecipeStepDTO;
 use App\Domain\Recipe\Models\Recipe;
 use App\Domain\Recipe\Repositories\RecipeRepository;
 use App\Domain\Recipe\Services\RecipeService;
 use App\Domain\Recipe\Services\RecipeServiceInterface;
+use App\Domain\User\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\Unit\TestUnitCase;
 
@@ -64,6 +67,29 @@ class RecipeServiceTest extends TestUnitCase
 
         $service = $this->getRecipeService($repository);
         $service->create($dto);
+    }
+
+    public function testGetByUserReturnsCollection(): void
+    {
+        $user = $this->getUser();
+        $recipe = $this->getRecipe();
+        $collection = new Collection([$recipe]);
+        $repository = $this->getRecipeRepository();
+
+        $repository
+            ->expects($this->once())
+            ->method('findByFields')
+            ->with(
+                $this->isInstanceOf(FieldsRecipeDTO::class),
+                ['steps', 'recipeIngredients.ingredient'],
+            )
+            ->willReturn($collection)
+        ;
+
+        $service = $this->getRecipeService($repository);
+        $result = $service->getByUser($user);
+
+        $this->assertSame($collection, $result);
     }
 
     private function getRecipeService(
@@ -123,5 +149,13 @@ class RecipeServiceTest extends TestUnitCase
         $mock->method('load')->willReturnSelf();
 
         return $mock;
+    }
+
+    private function getUser(
+        string $id = 'user-uuid',
+    ): User&MockObject {
+        return $this->createConfiguredModelMock(User::class, [
+            'id' => $id,
+        ]);
     }
 }

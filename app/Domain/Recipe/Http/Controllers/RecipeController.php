@@ -3,7 +3,9 @@
 namespace App\Domain\Recipe\Http\Controllers;
 
 use App\Domain\Recipe\Http\Requests\CreateRecipeRequest;
+use App\Domain\Recipe\Http\Requests\IndexRecipeRequest;
 use App\Domain\Recipe\Http\Resources\RecipeResource;
+use App\Domain\Recipe\Http\Resources\RecipeResourceCollection;
 use App\Domain\Recipe\Inputs\CreateRecipeInput;
 use App\Domain\Recipe\Services\RecipeServiceInterface;
 use App\Domain\User\Models\User;
@@ -15,6 +17,16 @@ class RecipeController
     public function __construct(
         private readonly RecipeServiceInterface $recipeService,
     ) {}
+
+    public function index(IndexRecipeRequest $request, User $user): JsonResponse
+    {
+        $recipes = $this->recipeService->getByUser($user);
+
+        return (new RecipeResourceCollection($recipes))
+            ->response()
+            ->setStatusCode(Response::HTTP_OK)
+        ;
+    }
 
     public function create(CreateRecipeRequest $request, User $user): JsonResponse
     {

@@ -19,8 +19,8 @@ class RecipeResource extends BasicResource
             'id' => $this->id,
             'name' => $this->name,
             'type' => $this->type,
-            RecipeStepResource::$wrapCollection => RecipeStepResource::collection($this->whenLoaded('steps')),
-            RecipeIngredientResource::$wrapCollection => RecipeIngredientResource::collection($this->whenLoaded('recipeIngredients')),
+            RecipeStepResource::$wrapCollection => RecipeStepResource::collection($this->steps),
+            RecipeIngredientResource::$wrapCollection => RecipeIngredientResource::collection($this->recipeIngredients),
         ];
     }
 }
