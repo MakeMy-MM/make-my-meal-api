@@ -69,6 +69,42 @@ class RecipeServiceTest extends TestUnitCase
         $service->create($dto);
     }
 
+    public function testDeleteCallsRepository(): void
+    {
+        $this->mockTransaction();
+
+        $recipe = $this->getRecipe();
+        $repository = $this->getRecipeRepository();
+
+        $repository
+            ->expects($this->once())
+            ->method('delete')
+            ->with($recipe)
+        ;
+
+        $service = $this->getRecipeService($repository);
+        $service->delete($recipe);
+    }
+
+    public function testDeleteThrowsOnException(): void
+    {
+        $this->mockTransaction();
+
+        $recipe = $this->getRecipe();
+        $repository = $this->getRecipeRepository();
+
+        $repository
+            ->expects($this->once())
+            ->method('delete')
+            ->willThrowException(new \RuntimeException('DB error'))
+        ;
+
+        $this->expectException(\RuntimeException::class);
+
+        $service = $this->getRecipeService($repository);
+        $service->delete($recipe);
+    }
+
     public function testGetByUserReturnsCollection(): void
     {
         $user = $this->getUser();

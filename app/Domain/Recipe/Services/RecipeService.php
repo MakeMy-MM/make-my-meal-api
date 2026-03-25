@@ -35,6 +35,11 @@ class RecipeService implements RecipeServiceInterface
         });
     }
 
+    public function delete(Recipe $recipe): void
+    {
+        DB::transaction(fn() => $this->repository->delete($recipe));
+    }
+
     /** @return Collection<int, Recipe> */
     public function getByUser(User $user): Collection
     {

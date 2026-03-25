@@ -127,6 +127,7 @@ app/
 - Chaque fichier thématique (ex: `auth.php`, `recipes.php`) définit son propre prefix et contient les routes correspondantes.
 - Les fichiers `routes.php` et `api.php` sont des index : ils ne contiennent pas de définition de routes directement.
 - `RoutePatterns` (`app/Utils/RoutePatterns.php`) est appelé dans `routes/api.php` via `Route::patterns()` pour valider les paramètres UUID dans les routes au niveau global.
+- Les routes ciblant une ressource spécifique (`{recipe}`, `{ingredient}`) sont regroupées dans un `Route::prefix('{resource}')->group(...)` séparé des routes de collection.
 
 ## Structuration du dossier tests
 

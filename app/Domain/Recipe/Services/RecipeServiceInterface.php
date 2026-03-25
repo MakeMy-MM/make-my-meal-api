@@ -11,6 +11,8 @@ interface RecipeServiceInterface
 {
     public function create(CreateRecipeDTO $dto): Recipe;
 
+    public function delete(Recipe $recipe): void;
+
     /** @return Collection<int, Recipe> */
     public function getByUser(User $user): Collection;
 }

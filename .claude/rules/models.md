@@ -50,6 +50,7 @@ description: Enforce the following architectural conventions, class responsibili
 - Le controller injecte l'interface, pas l'implémentation.
 - Les services retournent des **Models ou Collections**, jamais des Resources.
 - Les opérations d'écriture (create, update, delete) sont encapsulées via `DB::transaction(fn () => ...)`.
+- Ordre des méthodes : **CRUD de base** (`create`, `update`, `delete`) avant les **méthodes custom** (`getByUser`, etc.).
 
 ## Repositories
 

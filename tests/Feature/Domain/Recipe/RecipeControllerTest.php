@@ -100,6 +100,46 @@ class RecipeControllerTest extends TestFeatureCase
         $response->assertJsonFragment(['message' => 'Validation error']);
     }
 
+    public function testDeleteDestroyAsOwnerReturnsNoContent(): void
+    {
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->delete('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID)
+        ;
+
+        $response->assertStatus(Response::HTTP_NO_CONTENT);
+
+        $this->assertDatabaseMissing('recipes', [
+            'id' => RecipeSeeder::RECIPE_ID,
+        ]);
+    }
+
+    public function testDeleteDestroyAsNotOwnerReturnsForbidden(): void
+    {
+        $response = $this->getLoggedClient()
+            ->delete('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID)
+        ;
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN);
+    }
+
+    public function testDeleteDestroyAnonymouslyReturnsUnauthorized(): void
+    {
+        $response = $this->getClient()
+            ->delete('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID)
+        ;
+
+        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testDeleteDestroyWithInvalidIdReturnsNotFound(): void
+    {
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->delete('/users/' . UserSeeder::USER_ID . '/recipes/' . self::NONEXISTENT_UUID)
+        ;
+
+        $response->assertStatus(Response::HTTP_NOT_FOUND);
+    }
+
     /** @return array<int, string> */
     private function recipeStructure(): array
     {

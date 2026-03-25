@@ -39,4 +39,9 @@ class RecipeRepository extends ModelRepository
     {
         return RecipeIngredient::create($dto->toArray());
     }
+
+    public function delete(Recipe $recipe): void
+    {
+        $recipe->delete();
+    }
 }
