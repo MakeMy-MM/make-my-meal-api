@@ -8,6 +8,7 @@ Route::prefix('users/{user}/recipes')->middleware('auth:api')->group(function ()
     Route::post('/', [RecipeController::class, 'create']);
 
     Route::prefix('{recipe}')->group(function () {
+        Route::patch('/', [RecipeController::class, 'update']);
         Route::delete('/', [RecipeController::class, 'destroy']);
     });
 });

@@ -30,8 +30,7 @@ class IngredientRepository extends ModelRepository
     public function update(UpdateIngredientDTO $dto): Ingredient
     {
         $ingredient = $dto->getModel();
-        $ingredient->fill($dto->toArray());
-        $ingredient->save();
+        $ingredient->update($dto->toArray());
 
         return $ingredient;
     }

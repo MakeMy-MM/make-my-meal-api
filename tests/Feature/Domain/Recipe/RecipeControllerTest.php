@@ -3,6 +3,8 @@
 namespace Tests\Feature\Domain\Recipe;
 
 use App\Domain\Recipe\Models\Recipe;
+use App\Domain\Recipe\Models\RecipeIngredient;
+use App\Domain\Recipe\Models\RecipeStep;
 use Database\Seeders\IngredientSeeder;
 use Database\Seeders\RecipeSeeder;
 use Database\Seeders\UserSeeder;
@@ -98,6 +100,117 @@ class RecipeControllerTest extends TestFeatureCase
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
         $response->assertJsonFragment(['message' => 'Validation error']);
+    }
+
+    public function testPatchUpdateAsOwnerReturnsOk(): void
+    {
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->patch('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID, [
+                'name' => 'Salade mise à jour',
+            ])
+        ;
+
+        $response->assertStatus(Response::HTTP_OK);
+        $response->assertJsonStructure(['recipe' => $this->recipeStructure()]);
+        $response->assertJsonPath('recipe.name', 'Salade mise à jour');
+        $this->assertDatabaseHas('recipes', ['id' => RecipeSeeder::RECIPE_ID, 'name' => 'Salade mise à jour']);
+    }
+
+    public function testPatchUpdateAsNotOwnerReturnsForbidden(): void
+    {
+        $response = $this->getLoggedClient()
+            ->patch('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID, [
+                'name' => 'Hacked',
+            ])
+        ;
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN);
+    }
+
+    public function testPatchUpdateAnonymouslyReturnsUnauthorized(): void
+    {
+        $response = $this->getClient()
+            ->patch('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID, [
+                'name' => 'Hacked',
+            ])
+        ;
+
+        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testPatchUpdateWithInvalidIdReturnsNotFound(): void
+    {
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->patch('/users/' . UserSeeder::USER_ID . '/recipes/' . self::NONEXISTENT_UUID, [
+                'name' => 'Test',
+            ])
+        ;
+
+        $response->assertStatus(Response::HTTP_NOT_FOUND);
+    }
+
+    public function testPatchUpdateWithStepsMergesCorrectly(): void
+    {
+        $existingStep = RecipeStep::where('recipe_id', RecipeSeeder::RECIPE_ID)->firstOrFail();
+
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->patch('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID, [
+                'steps' => [
+                    ['id' => $existingStep->id, 'description' => 'Étape modifiée'],
+                    ['description' => 'Nouvelle étape'],
+                ],
+            ])
+        ;
+
+        $response->assertStatus(Response::HTTP_OK);
+        $this->assertDatabaseHas('recipe_steps', ['id' => $existingStep->id, 'description' => 'Étape modifiée', 'position' => 1]);
+        $this->assertDatabaseHas('recipe_steps', ['description' => 'Nouvelle étape', 'position' => 2]);
+        $this->assertDatabaseCount('recipe_steps', 2);
+    }
+
+    public function testPatchUpdateWithStepsDeletesMissingOnes(): void
+    {
+        $existingStep = RecipeStep::where('recipe_id', RecipeSeeder::RECIPE_ID)->firstOrFail();
+
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->patch('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID, [
+                'steps' => [
+                    ['description' => 'Remplacement total'],
+                ],
+            ])
+        ;
+
+        $response->assertStatus(Response::HTTP_OK);
+        $this->assertDatabaseMissing('recipe_steps', ['id' => $existingStep->id]);
+        $this->assertDatabaseHas('recipe_steps', ['description' => 'Remplacement total', 'position' => 1]);
+    }
+
+    public function testPatchUpdateWithIngredientsMergesCorrectly(): void
+    {
+        $existingIngredient = RecipeIngredient::where('recipe_id', RecipeSeeder::RECIPE_ID)->firstOrFail();
+
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->patch('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID, [
+                'ingredients' => [
+                    ['id' => $existingIngredient->id, 'quantity' => 5.00],
+                    ['ingredient_id' => IngredientSeeder::OIGNON_ID, 'quantity' => 3.00],
+                ],
+            ])
+        ;
+
+        $response->assertStatus(Response::HTTP_OK);
+        $this->assertDatabaseHas('recipe_ingredients', ['id' => $existingIngredient->id, 'quantity' => 5.00]);
+        $this->assertDatabaseHas('recipe_ingredients', ['ingredient_id' => IngredientSeeder::OIGNON_ID, 'quantity' => 3.00]);
+        $this->assertDatabaseCount('recipe_ingredients', 2);
+    }
+
+    public function testPatchUpdateWithEmptyBodyReturnsOk(): void
+    {
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->patch('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID, [])
+        ;
+
+        $response->assertStatus(Response::HTTP_OK);
     }
 
     public function testDeleteDestroyAsOwnerReturnsNoContent(): void

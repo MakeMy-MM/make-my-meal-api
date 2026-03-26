@@ -25,6 +25,8 @@ description: Enforce the following testing strategies, class structures, and nam
 - **Tout est mocké** sauf le service testé et les classes finales.
 - Les mocks retournent un type intersection (`ClassName&MockObject`).
 - Les noms des méthodes helper ne doivent **pas** contenir `Mock` (ex: `getUser()`, pas `getUserMock()`).
+- Les **collections de models** sont passées en paramètre sous forme d'**array typé** (ex: `array<string, RecipeStep&MockObject>`). La `new Collection($array)` est construite **dans** le helper `getModel()`, pas côté appelant. Cela évite les problèmes de covariance des generics PHPStan avec les mocks.
+- Si un model mock est utilisé dans une collection avec `keyBy('id')`, il doit mocker `offsetExists` et `offsetGet` via des callbacks basés sur les attributs, car `data_get()` passe par `ArrayAccess` et non `__get`.
 - Les models sont mockés via `createConfiguredModelMock()` avec des valeurs par défaut.
 - Les façades (`DB`, etc.) sont mockées via `shouldReceive()` avec `once()`.
 - Ordre des méthodes helper privées :

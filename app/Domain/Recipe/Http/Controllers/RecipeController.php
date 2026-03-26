@@ -5,9 +5,11 @@ namespace App\Domain\Recipe\Http\Controllers;
 use App\Domain\Recipe\Http\Requests\CreateRecipeRequest;
 use App\Domain\Recipe\Http\Requests\DeleteRecipeRequest;
 use App\Domain\Recipe\Http\Requests\IndexRecipeRequest;
+use App\Domain\Recipe\Http\Requests\UpdateRecipeRequest;
 use App\Domain\Recipe\Http\Resources\RecipeResource;
 use App\Domain\Recipe\Http\Resources\RecipeResourceCollection;
 use App\Domain\Recipe\Inputs\CreateRecipeInput;
+use App\Domain\Recipe\Inputs\UpdateRecipeInput;
 use App\Domain\Recipe\Models\Recipe;
 use App\Domain\Recipe\Services\RecipeServiceInterface;
 use App\Domain\User\Models\User;
@@ -39,6 +41,17 @@ class RecipeController
         return (new RecipeResource($recipe))
             ->response()
             ->setStatusCode(Response::HTTP_CREATED)
+        ;
+    }
+
+    public function update(UpdateRecipeRequest $request, User $user, Recipe $recipe): JsonResponse
+    {
+        $input = UpdateRecipeInput::fromRequest($request, ['recipe' => $recipe]);
+        $recipe = $this->recipeService->update($input);
+
+        return (new RecipeResource($recipe))
+            ->response()
+            ->setStatusCode(Response::HTTP_OK)
         ;
     }
 

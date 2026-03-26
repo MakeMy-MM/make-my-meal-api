@@ -58,6 +58,7 @@ description: Enforce the following architectural conventions, class responsibili
 - Les Repositories étendent `ModelRepository` (élément global dans `app/Repositories/`).
 - `ModelRepository` fournit `findByFields()` et `findFirstByFields()`.
 - Les Repositories spécialisés ajoutent `create()`, `update()`, `delete()` sans try/catch.
+- Les méthodes `update()` utilisent `$model->update($dto->toArray())`, pas `fill()` + `save()`.
 - Les exceptions DB remontent naturellement et sont gérées par `bootstrap/app.php` (`UniqueConstraintViolationException` → 409, `ModelNotFoundException` → 404, reste → 500).
 - Chaque Repository enfant re-déclare les méthodes héritées via `@method` avec le type concret.
 

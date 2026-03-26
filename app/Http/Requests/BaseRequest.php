@@ -75,4 +75,12 @@ abstract class BaseRequest extends FormRequest
         return ['sometimes', ...$rules];
     }
 
+    /**
+     * @param  mixed[]  $rules
+     * @return mixed[]
+     */
+    protected function requiredWithoutRules(string $field, array $rules): array
+    {
+        return ["required_without:{$field}", ...$rules];
+    }
 }
