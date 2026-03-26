@@ -3,13 +3,14 @@
 namespace Tests\Unit\Domain\Recipe\Http\Requests;
 
 use App\Domain\Recipe\Http\Requests\CreateRecipeRequest;
+use App\Domain\User\Models\User;
 use Tests\Unit\TestUnitCase;
 
 class CreateRecipeRequestTest extends TestUnitCase
 {
     public function testRulesContainsAllFields(): void
     {
-        $request = new CreateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertArrayHasKey('name', $rules);
@@ -23,7 +24,7 @@ class CreateRecipeRequestTest extends TestUnitCase
 
     public function testRulesNameIsRequired(): void
     {
-        $request = new CreateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('required', $rules['name'][0]);
@@ -31,7 +32,7 @@ class CreateRecipeRequestTest extends TestUnitCase
 
     public function testRulesTypeIsRequired(): void
     {
-        $request = new CreateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('required', $rules['type'][0]);
@@ -39,7 +40,7 @@ class CreateRecipeRequestTest extends TestUnitCase
 
     public function testRulesStepsIsRequired(): void
     {
-        $request = new CreateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('required', $rules['steps'][0]);
@@ -47,7 +48,7 @@ class CreateRecipeRequestTest extends TestUnitCase
 
     public function testRulesStepDescriptionIsRequired(): void
     {
-        $request = new CreateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('required', $rules['steps.*.description'][0]);
@@ -55,7 +56,7 @@ class CreateRecipeRequestTest extends TestUnitCase
 
     public function testRulesIngredientsIsRequired(): void
     {
-        $request = new CreateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('required', $rules['ingredients'][0]);
@@ -63,15 +64,23 @@ class CreateRecipeRequestTest extends TestUnitCase
 
     public function testRulesIngredientIdIsRequired(): void
     {
-        $request = new CreateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('required', $rules['ingredients.*.id'][0]);
     }
 
+    public function testRulesIngredientIdContainsExistsWithUserScope(): void
+    {
+        $request = $this->getRequest();
+        $rules = $request->rules();
+
+        $this->assertTrue($this->containsExistsRule($rules['ingredients.*.id']));
+    }
+
     public function testRulesIngredientQuantityIsRequired(): void
     {
-        $request = new CreateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('required', $rules['ingredients.*.quantity'][0]);
@@ -79,7 +88,7 @@ class CreateRecipeRequestTest extends TestUnitCase
 
     public function testMessagesContainsAllKeys(): void
     {
-        $request = new CreateRecipeRequest();
+        $request = $this->getRequest();
         $messages = $request->messages();
 
         $this->assertArrayHasKey('name.required', $messages);
@@ -99,4 +108,17 @@ class CreateRecipeRequestTest extends TestUnitCase
         $this->assertArrayHasKey('ingredients.*.id.required', $messages);
         $this->assertArrayHasKey('ingredients.*.quantity.required', $messages);
     }
+
+    private function getRequest(
+        ?User $user = null,
+    ): CreateRecipeRequest {
+        /** @var CreateRecipeRequest */
+        return $this->createRequestWithRouteParams(
+            CreateRecipeRequest::class,
+            'POST',
+            '/users/{user}/recipes',
+            ['user' => $user ?? $this->createStub(User::class)],
+        );
+    }
+
 }

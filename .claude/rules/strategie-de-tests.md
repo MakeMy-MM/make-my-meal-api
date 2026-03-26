@@ -84,6 +84,8 @@ $this->getLoggedClient()->get('/auth/me');
   - `$configuration` : configure les méthodes mockées.
 - Fournit `mockTransaction()` : mock `DB::transaction()` pour exécuter le callback directement.
 - Fournit `createFormRequestMock(string $requestClass, array $validated)` : crée une vraie instance de la Request spécifique avec les données validées. Nécessaire car `FormRequest` a une méthode `method()` qui empêche PHPUnit de la mocker via `createMock()` / `createConfiguredMock()`.
+- Fournit `createRequestWithRouteParams(string $requestClass, string $method, string $uri, array $routeParams)` : crée une instance de Request avec des paramètres de route injectés. Utilisé pour tester unitairement les Requests qui accèdent à `$this->route('param')` dans `rules()`. Les paramètres de route non pertinents pour le test sont passés via `$this->createStub(Model::class)`.
+- Fournit `containsExistsRule(mixed $rules): bool` : vérifie qu'un tableau de règles contient une instance de `Illuminate\Validation\Rules\Exists`. Utilisé pour tester que les Requests ajoutent bien des règles `Rule::exists()` scopées.
 
 ## Règles générales
 

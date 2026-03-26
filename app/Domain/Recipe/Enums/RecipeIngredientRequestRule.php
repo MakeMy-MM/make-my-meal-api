@@ -16,7 +16,6 @@ enum RecipeIngredientRequestRule: string implements RuleRequestInterface
         return match ($this) {
             self::ID => [
                 'uuid',
-                'exists:recipe_ingredients,id',
             ],
             self::QUANTITY => [
                 'numeric',

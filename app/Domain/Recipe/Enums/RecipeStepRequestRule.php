@@ -14,7 +14,6 @@ enum RecipeStepRequestRule: string implements RuleRequestInterface
         return match ($this) {
             self::ID => [
                 'uuid',
-                'exists:recipe_steps,id',
             ],
             self::DESCRIPTION => [
                 'string',

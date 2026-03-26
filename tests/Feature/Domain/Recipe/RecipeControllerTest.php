@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Domain\Recipe;
 
+use App\Domain\Ingredient\Models\Ingredient;
 use App\Domain\Recipe\Models\Recipe;
 use App\Domain\Recipe\Models\RecipeIngredient;
 use App\Domain\Recipe\Models\RecipeStep;
+use App\Domain\User\Models\User;
 use Database\Seeders\IngredientSeeder;
 use Database\Seeders\RecipeSeeder;
 use Database\Seeders\UserSeeder;
@@ -100,6 +102,23 @@ class RecipeControllerTest extends TestFeatureCase
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
         $response->assertJsonFragment(['message' => 'Validation error']);
+    }
+
+    public function testPostCreateWithOtherUserIngredientReturnsUnprocessableEntity(): void
+    {
+        $otherUser = User::factory()->create();
+        $otherIngredient = Ingredient::factory()->create(['user_id' => $otherUser->id]);
+
+        $body = $this->validCreateBody();
+        $body['ingredients'] = [
+            ['id' => $otherIngredient->id, 'quantity' => 1],
+        ];
+
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->post('/users/' . UserSeeder::USER_ID . '/recipes', $body)
+        ;
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     public function testPatchUpdateAsOwnerReturnsOk(): void
@@ -202,6 +221,57 @@ class RecipeControllerTest extends TestFeatureCase
         $this->assertDatabaseHas('recipe_ingredients', ['id' => $existingIngredient->id, 'quantity' => 5.00]);
         $this->assertDatabaseHas('recipe_ingredients', ['ingredient_id' => IngredientSeeder::OIGNON_ID, 'quantity' => 3.00]);
         $this->assertDatabaseCount('recipe_ingredients', 2);
+    }
+
+    public function testPatchUpdateWithOtherUserIngredientReturnsUnprocessableEntity(): void
+    {
+        $otherUser = User::factory()->create();
+        $otherIngredient = Ingredient::factory()->create(['user_id' => $otherUser->id]);
+
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->patch('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID, [
+                'ingredients' => [
+                    ['ingredient_id' => $otherIngredient->id, 'quantity' => 1],
+                ],
+            ])
+        ;
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
+    public function testPatchUpdateWithStepFromOtherRecipeReturnsUnprocessableEntity(): void
+    {
+        $otherRecipe = Recipe::factory()->create(['user_id' => UserSeeder::USER_ID]);
+        $otherStep = RecipeStep::factory()->create(['recipe_id' => $otherRecipe->id]);
+
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->patch('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID, [
+                'steps' => [
+                    ['id' => $otherStep->id, 'description' => 'Hijacked step'],
+                ],
+            ])
+        ;
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
+    public function testPatchUpdateWithRecipeIngredientFromOtherRecipeReturnsUnprocessableEntity(): void
+    {
+        $otherRecipe = Recipe::factory()->create(['user_id' => UserSeeder::USER_ID]);
+        $otherRecipeIngredient = RecipeIngredient::factory()->create([
+            'recipe_id' => $otherRecipe->id,
+            'ingredient_id' => IngredientSeeder::TOMATE_ID,
+        ]);
+
+        $response = $this->getLoggedClient(['email' => UserSeeder::USER_EMAIL])
+            ->patch('/users/' . UserSeeder::USER_ID . '/recipes/' . RecipeSeeder::RECIPE_ID, [
+                'ingredients' => [
+                    ['id' => $otherRecipeIngredient->id, 'quantity' => 99],
+                ],
+            ])
+        ;
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     public function testPatchUpdateWithEmptyBodyReturnsOk(): void

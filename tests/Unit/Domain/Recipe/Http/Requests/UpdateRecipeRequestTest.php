@@ -3,13 +3,15 @@
 namespace Tests\Unit\Domain\Recipe\Http\Requests;
 
 use App\Domain\Recipe\Http\Requests\UpdateRecipeRequest;
+use App\Domain\Recipe\Models\Recipe;
+use App\Domain\User\Models\User;
 use Tests\Unit\TestUnitCase;
 
 class UpdateRecipeRequestTest extends TestUnitCase
 {
     public function testRulesContainsAllFields(): void
     {
-        $request = new UpdateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertArrayHasKey('name', $rules);
@@ -25,7 +27,7 @@ class UpdateRecipeRequestTest extends TestUnitCase
 
     public function testRulesNameIsSometimes(): void
     {
-        $request = new UpdateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('sometimes', $rules['name'][0]);
@@ -33,7 +35,7 @@ class UpdateRecipeRequestTest extends TestUnitCase
 
     public function testRulesTypeIsSometimes(): void
     {
-        $request = new UpdateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('sometimes', $rules['type'][0]);
@@ -41,7 +43,7 @@ class UpdateRecipeRequestTest extends TestUnitCase
 
     public function testRulesStepsIsSometimes(): void
     {
-        $request = new UpdateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('sometimes', $rules['steps'][0]);
@@ -49,15 +51,23 @@ class UpdateRecipeRequestTest extends TestUnitCase
 
     public function testRulesStepIdIsSometimes(): void
     {
-        $request = new UpdateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('sometimes', $rules['steps.*.id'][0]);
     }
 
+    public function testRulesStepIdContainsExistsWithRecipeScope(): void
+    {
+        $request = $this->getRequest();
+        $rules = $request->rules();
+
+        $this->assertTrue($this->containsExistsRule($rules['steps.*.id']));
+    }
+
     public function testRulesStepDescriptionIsRequiredWithoutId(): void
     {
-        $request = new UpdateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('required_without:steps.*.id', $rules['steps.*.description'][0]);
@@ -65,7 +75,7 @@ class UpdateRecipeRequestTest extends TestUnitCase
 
     public function testRulesIngredientsIsSometimes(): void
     {
-        $request = new UpdateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('sometimes', $rules['ingredients'][0]);
@@ -73,23 +83,39 @@ class UpdateRecipeRequestTest extends TestUnitCase
 
     public function testRulesIngredientIdIsSometimes(): void
     {
-        $request = new UpdateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('sometimes', $rules['ingredients.*.id'][0]);
     }
 
+    public function testRulesRecipeIngredientIdContainsExistsWithRecipeScope(): void
+    {
+        $request = $this->getRequest();
+        $rules = $request->rules();
+
+        $this->assertTrue($this->containsExistsRule($rules['ingredients.*.id']));
+    }
+
     public function testRulesIngredientRefIdIsRequiredWithoutId(): void
     {
-        $request = new UpdateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('required_without:ingredients.*.id', $rules['ingredients.*.ingredient_id'][0]);
     }
 
+    public function testRulesIngredientRefIdContainsExistsWithUserScope(): void
+    {
+        $request = $this->getRequest();
+        $rules = $request->rules();
+
+        $this->assertTrue($this->containsExistsRule($rules['ingredients.*.ingredient_id']));
+    }
+
     public function testRulesIngredientQuantityIsRequiredWithoutId(): void
     {
-        $request = new UpdateRecipeRequest();
+        $request = $this->getRequest();
         $rules = $request->rules();
 
         $this->assertSame('required_without:ingredients.*.id', $rules['ingredients.*.quantity'][0]);
@@ -97,7 +123,7 @@ class UpdateRecipeRequestTest extends TestUnitCase
 
     public function testMessagesContainsAllKeys(): void
     {
-        $request = new UpdateRecipeRequest();
+        $request = $this->getRequest();
         $messages = $request->messages();
 
         $this->assertArrayHasKey('name.required', $messages);
@@ -124,4 +150,21 @@ class UpdateRecipeRequestTest extends TestUnitCase
         $this->assertArrayHasKey('ingredients.*.quantity.required_without', $messages);
         $this->assertArrayHasKey('ingredients.*.quantity.numeric', $messages);
     }
+
+    private function getRequest(
+        ?User $user = null,
+        ?Recipe $recipe = null,
+    ): UpdateRecipeRequest {
+        /** @var UpdateRecipeRequest */
+        return $this->createRequestWithRouteParams(
+            UpdateRecipeRequest::class,
+            'PATCH',
+            '/users/{user}/recipes/{recipe}',
+            [
+                'user' => $user ?? $this->createStub(User::class),
+                'recipe' => $recipe ?? $this->createStub(Recipe::class),
+            ],
+        );
+    }
+
 }
